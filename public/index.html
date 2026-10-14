@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>丑团 choutuan</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  :root { --bg:#FFF7E8; --ink:#1A1A1A; --yellow:#FFC300; --card:#fff; }
+  * { box-sizing:border-box; } body { margin:0; font-family:-apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background:var(--bg); color:var(--ink); }
+  header { background:var(--yellow); padding:18px 16px 14px; position:sticky; top:0; }
+  header h1 { margin:0; font-size:22px; } header p { margin:4px 0 0; opacity:.7; font-size:13px; }
+  .wrap { padding:14px 14px 90px; max-width:520px; margin:0 auto; }
+  .card { background:var(--card); border-radius:14px; padding:14px; margin-bottom:12px; box-shadow:0 2px 10px rgba(0,0,0,.05); }
+  .shop { display:flex; gap:12px; align-items:center; }
+  .logo { width:52px; height:52px; border-radius:12px; background:#FFE28A; display:flex; align-items:center; justify-content:center; font-size:26px; }
+  button { background:#1A1A1A; color:#fff; border:0; border-radius:10px; padding:10px 14px; font-size:14px; }
+  #user { font-size:13px; opacity:.75; }
+  nav { position:fixed; bottom:0; left:0; right:0; background:#fff; border-top:1px solid #eee; display:flex; max-width:520px; margin:0 auto; }
+  nav div { flex:1; text-align:center; padding:10px 0 16px; font-size:12px; }
+</style>
+</head>
+<body>
+<header><h1>丑团 <span style="font-size:13px">choutuan</span></h1><p>类美团 · Telegram Mini App 骨架 v0.1.0</p></header>
+<div class="wrap">
+  <div class="card"><div id="user">正在连接 Telegram…</div></div>
+  <div class="card"><b>附近商家</b><div id="shops" style="margin-top:10px">加载中…</div></div>
+  <div class="card" style="font-size:13px;opacity:.7">下一步:按需求接入 外卖点餐 / 到店团购 / 购物车 / 订单. 先在 Issue 里定需求, 再画草稿图.</div>
+</div>
+<nav><div>🏠<br/>首页</div><div>🧾<br/>订单</div><div>👤<br/>我的</div></nav>
+<script>
+const tg = window.Telegram?.WebApp;
+if (tg) { tg.ready(); tg.expand(); document.getElementById('user').textContent = '你好, ' + (tg.initDataUnsafe?.user?.first_name || '丑团食客') + ' 👋'; }
+fetch('/api/shops').then(r=>r.json()).then(j=>{
+  document.getElementById('shops').innerHTML = j.data.map(s=>`<div class="shop" style="padding:10px 0;border-top:1px solid #f2f2f2"><div class="logo">🍜</div><div style="flex:1"><div><b>${s.name}</b></div><div style="font-size:12px;opacity:.6">⭐${s.rating} · 月售${s.sales} · 起送¥${s.min}</div></div><button>进店</button></div>`).join('');
+});
+</script>
+</body>
+</html>

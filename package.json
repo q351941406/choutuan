@@ -1,0 +1,19 @@
+{
+  "name": "choutuan",
+  "version": "0.1.0",
+  "description": "丑团 choutuan - 类美团 Telegram Mini App",
+  "type": "module",
+  "scripts": {
+    "dev": "node src/server.js",
+    "start": "node src/server.js",
+    "bot:info": "node scripts/bot-info.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
