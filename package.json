@@ -4,16 +4,27 @@
   "description": "丑团 choutuan - 类美团 Telegram Mini App",
   "type": "module",
   "scripts": {
-    "dev": "node src/server.js",
-    "start": "node src/server.js",
-    "bot:info": "node scripts/bot-info.js"
+    "dev": "node src/node-server.js",
+    "start": "node src/node-server.js",
+    "dev:cf": "wrangler dev --local --persist-to=.wrangler/state",
+    "db:migrate:local": "wrangler d1 migrations apply choutuan-db --local",
+    "db:seed:local": "wrangler d1 execute choutuan-db --local --file=db/seed.sql",
+    "db:setup:local": "npm run db:migrate:local && npm run db:seed:local",
+    "deploy": "wrangler deploy",
+    "bot:info": "node scripts/bot-info.js",
+    "seed:gen": "node scripts/generate-seed.mjs"
   },
   "dependencies": {
-    "express": "^4.19.2",
+    "@hono/node-server": "^2.1.5",
     "cors": "^2.8.5",
-    "dotenv": "^16.4.5"
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "hono": "^4.6.0"
   },
   "engines": {
     "node": ">=18"
+  },
+  "devDependencies": {
+    "wrangler": "^4.151.0"
   }
 }
