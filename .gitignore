@@ -1,6 +1,7 @@
-node_modules/
-.env
-.DS_Store
 *.log
-dist/
+.DS_Store
+.env
 .vercel/
+.wrangler/
+dist/
+node_modules/
