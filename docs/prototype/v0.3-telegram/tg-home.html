@@ -1,0 +1,49 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"/><meta name="viewport" content="width=390"/>
+<title>丑团 Telegram风-首页</title><script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{
+  --tg-bg:#FFFFFF; --tg-secondary:#F2F2F7; --tg-text:#000000; --tg-hint:#8E8E93;
+  --tg-link:#2481CC; --tg-button:#2481CC; --tg-button-text:#FFFFFF; --tg-section:#8E8E93;
+}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC",sans-serif;background:#E9E9EE;color:var(--tg-text)}
+.phone{width:390px;margin:0 auto;background:var(--tg-bg);min-height:844px;padding-bottom:86px}
+/* Telegram式导航 */
+.nav{position:sticky;top:0;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);padding:14px 16px 8px;border-bottom:.5px solid #C6C6C8;z-index:5}
+.nav-top{display:flex;align-items:center;justify-content:space-between}
+.nav-title{font-size:17px;font-weight:600}
+.nav-loc{font-size:13px;color:var(--tg-link)}
+.search{margin:10px 0 6px;background:var(--tg-secondary);border-radius:10px;padding:8px 10px;font-size:15px;color:var(--tg-hint);display:flex;gap:6px;align-items:center}
+/* chips */
+.chips{display:flex;gap:8px;padding:12px 16px 4px;overflow:hidden}
+.chip{font-size:14px;padding:7px 13px;border-radius:16px;background:var(--tg-secondary);white-space:nowrap}
+.chip.on{background:var(--tg-button);color:#fff}
+/* iOS分组列表 */
+.group{margin:12px 16px;background:var(--tg-bg);border-radius:10px;overflow:hidden;border:.5px solid #E5E5EA}
+.group-title{font-size:13px;color:var(--tg-section);text-transform:uppercase;padding:18px 32px 6px;letter-spacing:.3px}
+.cell{display:flex;gap:12px;padding:11px 14px;align-items:center;background:#fff}
+.cell+.cell{border-top:.5px solid #E5E5EA}
+.avatar{width:48px;height:48px;border-radius:10px;background:#EAF3FB;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0}
+.meta{flex:1;min-width:0}.meta b{font-size:16px;font-weight:400;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sub{font-size:13px;color:var(--tg-hint);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chev{color:#C7C7CC;font-size:18px}
+.hint{font-size:13px;color:var(--tg-hint);padding:8px 32px;line-height:1.5}
+/* Telegram式底部 */
+.tab{position:fixed;bottom:0;width:390px;left:50%;transform:translateX(-50%);background:rgba(249,249,249,.94);backdrop-filter:blur(12px);border-top:.5px solid #C6C6C8;display:flex}
+.tab div{flex:1;text-align:center;padding:7px 0 18px;font-size:10px;color:var(--tg-hint)}
+.tab .on{color:var(--tg-link)}
+</style></head><body><div class="phone">
+<div class="nav"><div class="nav-top"><div class="nav-loc">‹ 南山</div><div class="nav-title">丑团 choutuan</div><div class="nav-loc">···</div></div>
+<div class="search">⌕ &nbsp;搜索</div></div>
+<div class="chips"><div class="chip on">全部</div><div class="chip">美食 🍜</div><div class="chip">丽人 💇</div><div class="chip">住宿 🏨</div><div class="chip">电影 🎬</div></div>
+<div class="group-title">附近 · 4</div>
+<div class="group">
+<div class="cell"><div class="avatar">🍲</div><div class="meta"><b>丑团黄焖鸡(南山店)</b><div class="sub">4.8分 · 人均¥22 · 1.2km</div></div><div class="chev">›</div></div>
+<div class="cell"><div class="avatar">🧋</div><div class="meta"><b>隔壁老王奶茶</b><div class="sub">4.6分 · 人均¥14 · 800m</div></div><div class="chev">›</div></div>
+<div class="cell"><div class="avatar">🍲</div><div class="meta"><b>丑团火锅(拼团店)</b><div class="sub">4.9分 · 人均¥68 · 2.1km</div></div><div class="chev">›</div></div>
+<div class="cell"><div class="avatar">💈</div><div class="meta"><b>阿丑理发</b><div class="sub">4.7分 · 人均¥39 · 500m</div></div><div class="chev">›</div></div>
+</div>
+<div class="hint">Telegram 风格说明：背景、文字、按钮色自动跟随 Telegram 深色 / 浅色主题，无自定义大黄块，列表为 iOS 原生 Cell，点开即详情。</div>
+<div class="tab"><div class="on">◉<br/>首页</div><div>◎<br/>发现</div><div>◎<br/>我的</div></div>
+</div>
+<script>try{const tg=window.Telegram.WebApp;tg.ready();tg.expand();}catch(e){}</script>
+</body></html>
