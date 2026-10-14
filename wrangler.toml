@@ -1,26 +1,22 @@
 name = "choutuan"
 compatibility_date = "2026-10-01"
-# 前端静态: public/index.html, API: src/worker.js (Hono)
 main = "src/worker.js"
 
 [assets]
 directory = "./public"
 not_found_handling = "single-page-application"
 
-# D1 主库 (先本地跑, 上线前 wrangler d1 create choutuan-db 把id填进来)
 [[d1_databases]]
 binding = "DB"
 database_name = "choutuan-db"
-database_id = "00000000-0000-0000-0000-000000000000"
+database_id = "f149b6c1-c0d2-4606-9168-4f8861cc6d92"
 migrations_dir = "db/migrations"
 
-# KV 缓存 (同上, 先本地仿真)
 [[kv_namespaces]]
 binding = "CACHE"
-id = "00000000000000000000000000000000"
-preview_id = "00000000000000000000000000000000"
+id = "10d94612b4134a66bea77beb5b8e8305"
+preview_id = "571fc218fcc34e41ada6c02ab0147e07"
 
-# R2 店图 (占位, 有图再建)
 [[r2_buckets]]
 binding = "IMAGES"
 bucket_name = "choutuan-images"
