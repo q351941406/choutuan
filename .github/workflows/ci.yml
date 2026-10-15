@@ -15,6 +15,7 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - name: 语法自检
         run: npm run check
+      - run: npm run ui:smoke
       - name: seed一致性 (shops.js -> seed.sql)
         run: npm run seed:gen && git diff --exit-code db/seed.sql
       - name: D1本地建表+灌库自检

@@ -15,8 +15,9 @@
     "deploy:dry": "wrangler deploy --dry-run",
     "bot:info": "node scripts/bot-info.js",
     "seed:gen": "node scripts/generate-seed.mjs",
-    "check": "node --check src/app.js && node --check src/worker.js && node --check src/node-server.js && echo check-ok",
-    "e2e:tguser": "node scripts/tguser-e2e.mjs"
+    "check": "node --check src/app.js && node --check src/worker.js && node --check src/node-server.js && node --check scripts/ui-smoke.mjs && echo check-ok",
+    "e2e:tguser": "node scripts/tguser-e2e.mjs",
+    "ui:smoke": "node scripts/ui-smoke.mjs"
   },
   "dependencies": {
     "@hono/node-server": "^2.1.5",
