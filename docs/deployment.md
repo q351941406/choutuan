@@ -7,9 +7,18 @@
 - R2 `choutuan-images` / preview, Worker `choutuan` → https://choutuan.telesearch.workers.dev
 - 配置全在 `wrangler.toml`, 改绑定必须同步改此文件并提交。
 
-## 发版流程
+## 分支与环境
+
+- `main`: 集成, 推了只跑 CI。
+- `production`: 发版, 推了跑 CI + CD, 线上 Worker 只认它。
+- 默认分支保持 `main`, `production` 常驻不删。
+
+## 发版流程 (PR main → production)
+
+先在 `main` 上验证, 再提 PR 到 `production`:
 
 ```bash
+git checkout main && git pull
 npm run check                       # 语法自检
 npm run db:migrate:remote           # 先迁线上库, 再发代码
 npx wrangler d1 execute choutuan-db --remote --command="SELECT count(*) as shops FROM shops;"

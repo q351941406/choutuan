@@ -59,6 +59,18 @@ npm run dev:cf           # 方式2: CF仿真(D1+KV+R2), 和线上一致 http://l
 - [docs/prototype/](docs/prototype/) 草稿与真机截图
 - [CHANGELOG.md](CHANGELOG.md) 版本记录
 
+## 分支模型 (GitHub Flow + production 发版)
+
+- `feat/xxx` → PR → `main`: 只跑 CI (自检+D1本地+冒烟+预演), 不发版
+- `main` → PR → `production`: 合进去自动跑 CI + CD (迁线上库→发 Workers→线上冒烟)
+- 紧急回滚: `git revert` 到 `main`, 再提 PR 到 `production`
+
+```bash
+git checkout -b feat/xxx && git push origin feat/xxx   # 日常开发
+# 提 PR 到 main, 绿了合入
+# 发版时: 提 PR main → production, 合入即上线
+```
+
 ## 路线图
 
 - v0.7: `lat/lng/geohash` 落库 + 附近排序 (D1 索引, 不加 PostGIS)
