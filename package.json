@@ -1,7 +1,7 @@
 {
   "name": "choutuan",
-  "version": "0.1.0",
-  "description": "丑团 choutuan - 类美团 Telegram Mini App",
+  "version": "0.6.1",
+  "description": "丑团 choutuan - 同城店铺信息展示 Telegram Mini App (Hono + Cloudflare)",
   "type": "module",
   "scripts": {
     "dev": "node src/node-server.js",
@@ -10,15 +10,16 @@
     "db:migrate:local": "wrangler d1 migrations apply choutuan-db --local",
     "db:seed:local": "wrangler d1 execute choutuan-db --local --file=db/seed.sql",
     "db:setup:local": "npm run db:migrate:local && npm run db:seed:local",
+    "db:migrate:remote": "wrangler d1 migrations apply choutuan-db --remote",
     "deploy": "wrangler deploy",
+    "deploy:dry": "wrangler deploy --dry-run",
     "bot:info": "node scripts/bot-info.js",
-    "seed:gen": "node scripts/generate-seed.mjs"
+    "seed:gen": "node scripts/generate-seed.mjs",
+    "check": "node --check src/app.js && node --check src/worker.js && node --check src/node-server.js && echo check-ok"
   },
   "dependencies": {
     "@hono/node-server": "^2.1.5",
-    "cors": "^2.8.5",
     "dotenv": "^16.4.5",
-    "express": "^4.19.2",
     "hono": "^4.6.0"
   },
   "engines": {

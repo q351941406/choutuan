@@ -5,3 +5,6 @@
 .wrangler/
 dist/
 node_modules/
+.wrangler/state/
+dev.db*
+*.sqlite*
