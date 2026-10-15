@@ -107,16 +107,33 @@ export function createApp() {
       return await r.json().catch(() => ({}));
     } catch (e) { console.error('tgApi fail', method, e); return {}; }
   }
-  // Telegram Bot webhook: BotFather 设 webhook 到此地址后, /start 即有反应
-  app.get('/api/telegram-webhook', (c) => c.json({ ok: true, usage: 'POST Telegram updates here' }));
-  app.post('/api/telegram-webhook', async (c) => {
-    const token = c.env?.BOT_TOKEN || (typeof process !== 'undefined' ? process.env?.BOT_TOKEN : '');
+  function hookToken(c, hook) {
+    const env = c.env || {};
+    if (hook === env.HOOK_PROD && env.BOT_TOKEN) return { token: env.BOT_TOKEN, role: 'prod' };
+    if (hook === env.HOOK_TEST && env.TEST_BOT_TOKEN) return { token: env.TEST_BOT_TOKEN, role: 'test' };
+    // 本地 Node 调试: 环境变量直通 (线上以 wrangler secret/vars 为准)
+    try {
+      const g = (typeof process !== 'undefined' && process.env) || {};
+      if (hook === g.HOOK_PROD && g.BOT_TOKEN) return { token: g.BOT_TOKEN, role: 'prod' };
+      if (hook === g.HOOK_TEST && g.TEST_BOT_TOKEN) return { token: g.TEST_BOT_TOKEN, role: 'test' };
+    } catch {}
+    return null;
+  }
+  // Telegram Bot webhook (生产/测试各走各的随机 path, 见 bot-webhook.sh ROLE=prod|test)
+  app.get('/api/tg/:hook', (c) => {
+    const hit = hookToken(c, c.req.param('hook'));
+    if (!hit) return c.json({ ok: false, error: 'unknown hook' }, 404);
+    return c.json({ ok: true, role: hit.role, usage: 'POST Telegram updates here' });
+  });
+  app.post('/api/tg/:hook', async (c) => {
+    const hit = hookToken(c, c.req.param('hook'));
+    if (!hit) return c.json({ ok: false, error: 'unknown hook' }, 404);
+    const token = hit.token;
     let update;
     try { update = await c.req.json(); } catch { return c.json({ ok: false, error: 'bad json' }, 400); }
     const msg = update?.message;
     const chatId = msg?.chat?.id;
     if (!chatId) return c.json({ ok: true });
-    if (!token || token === 'YOUR_BOT_TOKEN_HERE') { console.error('BOT_TOKEN missing, skip reply'); return c.json({ ok: true }); }
     const text = (msg?.text || '').trim();
     const isStart = text.startsWith('/start');
     await tgApi(token, 'sendMessage', {
