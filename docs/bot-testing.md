@@ -44,3 +44,15 @@ BOT_TOKEN=xxx bash scripts/bot-webhook.sh                # 设 webhook + Menu Bu
 
 之后每次 `main → production` 发版, CD 自动: 迁库 → 发版 → 线上冒烟 → Telegram e2e,
 全绿才算成功, 全程无人值守。
+
+## TData 全自治 (推荐, 连第一句话都不用你发)
+
+`opentele` 已装好, `scripts/tguser_e2e.py` 已就绪 (语法验过, 待 TData 首跑)。
+你只给一个东西: **测试号 Telegram Desktop 完全退出后, 把 `tdata` 文件夹打 zip 发我**
+(Windows 默认在 `%AppData%\Telegram Desktop\tdata`)。
+必须测试专用号, 里边别放任何私人聊天 —— TData = 完整账号权限, 和 session 文件一样,
+谁拿到谁就能登录这个号 (官方文档原话)。
+我收到后: 解压到 `/workspace/.choutuan-tdata` (`chmod 700`, 仓外) →
+`UseCurrentSession` 零短信转换 → 没有测试 Bot 就用 BotFather 自动建一个 →
+给它发 `/start` → 断言欢迎语 + web_app 按钮 → 全 PASS。
+跑完你可随时在官方客户端「设置 → 设备」里终止该会话。换号就重发一份 zip。

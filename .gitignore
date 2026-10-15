@@ -9,3 +9,8 @@ node_modules/
 dev.db*
 *.sqlite*
 actionlint
+
+# 用户号会话 (TData/session, 完整账号权限, 永不进仓)
+.choutuan-tg/
+*.session
+*.session-journal
