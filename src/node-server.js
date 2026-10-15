@@ -4,5 +4,5 @@ import { serve } from '@hono/node-server';
 import { createApp } from './app.js';
 const app = createApp();
 const port = Number(process.env.PORT || 3000);
-console.log(`[choutuan 丑团 v0.8.0] node-memory on http://localhost:${port}`);
+console.log(`[choutuan 丑团 v0.9.0] node-memory on http://localhost:${port}`);
 serve({ fetch: app.fetch, port });

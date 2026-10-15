@@ -12,7 +12,7 @@ function mapRow(r) {
     phone: r.phone, metro: r.metro, emoji: r.emoji,
     tags: JSON.parse(r.tags_json || '[]'),
     signature: JSON.parse(r.signature_json || '[]'),
-    reviews: JSON.parse(r.reviews_json || '[]'),
+    reviews: JSON.parse(r.reviews_json || '[]'), lat: r.lat || 0, lng: r.lng || 0,
   };
 }
 function filterMem(category, q) {
@@ -27,7 +27,7 @@ export function createApp() {
   app.use('/api/*', cors());
 
   app.get('/api/health', (c) => c.json({
-    ok: true, name: 'choutuan 丑团', version: '0.8.0',
+    ok: true, name: 'choutuan 丑团', version: '0.9.0',
     runtime: c.env?.DB ? 'cloudflare-workers+d1' : 'node-memory',
     time: new Date().toISOString(),
   }));
@@ -56,7 +56,7 @@ export function createApp() {
     try {
       if (c.env?.DB) {
         // 免费KV写只有1000/天: 只缓存无q请求, 有q直接查库不写KV
-        const cacheKey = `shops:v1:${category || 'ALL'}`;
+        const cacheKey = `shops:v2:${category || 'ALL'}`;
         if (!q && c.env?.CACHE) {
           const hit = await c.env.CACHE.get(cacheKey, 'json');
           if (hit) return c.json({ ok: true, total: hit.length, data: hit, cached: true });
@@ -82,13 +82,13 @@ export function createApp() {
     try {
       if (c.env?.DB) {
         if (c.env?.CACHE) {
-          const hit = await c.env.CACHE.get(`shop:v1:${id}`, 'json');
+          const hit = await c.env.CACHE.get(`shop:v2:${id}`, 'json');
           if (hit) return c.json({ ok: true, data: hit, cached: true });
         }
         const r = await c.env.DB.prepare('SELECT * FROM shops WHERE id = ?').bind(id).first();
         if (!r) return c.json({ ok: false, error: 'not found' }, 404);
         const data = mapRow(r);
-        if (c.env?.CACHE) await c.env.CACHE.put(`shop:v1:${id}`, JSON.stringify(data), { expirationTtl: 600 });
+        if (c.env?.CACHE) await c.env.CACHE.put(`shop:v2:${id}`, JSON.stringify(data), { expirationTtl: 600 });
         return c.json({ ok: true, data });
       }
     } catch (e) { console.error('shop detail d1 fail', e); }
