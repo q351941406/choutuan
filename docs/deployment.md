@@ -47,7 +47,24 @@ curl -s --get --data-urlencode "category=美食" https://choutuan.telesearch.wor
   `npx wrangler d1 export choutuan-db --remote --output=backup-$(date +%F).sql`。
 - 大版本先发 preview (`wrangler deploy --preview`) 测完再发生产。
 
-## Bot 接线 (发版后必做)
+## Bot 接线 (发版后必做, 否则 /start 没反应)
+
+Mini App 和 Bot 应答是两套东西: 前端只是个网页, `/start` 要有人回,
+必须设 webhook + Menu Button。
+
+```bash
+# 1) 线上 secret (只做一次, 值不进仓)
+npx wrangler secret put BOT_TOKEN
+# 本地调试: cp .env.example .env 后填入真值
+
+# 2) 设 webhook + Menu Button (Token 只从环境变量读)
+BOT_TOKEN=xxx WEBAPP_URL=https://choutuan.telesearch.workers.dev bash scripts/bot-webhook.sh
+
+# 3) 去 Bot 里发 /start, 应收到带「打开丑团」按钮的欢迎语, 点左下角菜单也能进
+```
+
+注意: 历史提交泄露过真 Token, 如已在 @BotFather `/revoke` 换新,
+上面第 1/2 步用新 Token 重做一遍即可。
 
 `@BotFather → /mybots → @choutuan_bot → Bot Settings → Menu Button →
 Configure Menu Button →` 填线上 URL。Telegram 缓存重, 改完等 1-2 分钟或重进 Bot。

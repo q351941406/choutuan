@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.7.0 (2026-10-15)
+- Bot 有反应了: 新增 `POST /api/telegram-webhook`, `/start` 回带 web_app 按钮的欢迎语, 其他消息回进店引导。
+- `scripts/bot-webhook.sh`: 一键设 webhook + Menu Button (Token 只读环境变量)。
+- `src/node-server.js` 自动读 `.env`, 线上用 `wrangler secret put BOT_TOKEN`。
+
 ## v0.6.1 (2026-10-15)
 - 仓库转私有; 清真 Token 硬编码 (`.env.example` / `bot-info.js` / 需求文档去敏感化);
   删废弃 Express/Vercel 残留; 包瘦身 (去 express/cors)。

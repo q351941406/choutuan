@@ -27,7 +27,7 @@ export function createApp() {
   app.use('/api/*', cors());
 
   app.get('/api/health', (c) => c.json({
-    ok: true, name: 'choutuan 丑团', version: '0.5.0-cf',
+    ok: true, name: 'choutuan 丑团', version: '0.7.0',
     runtime: c.env?.DB ? 'cloudflare-workers+d1' : 'node-memory',
     time: new Date().toISOString(),
   }));
@@ -95,6 +95,36 @@ export function createApp() {
     const s = memShops.find(x => x.id === id);
     if (!s) return c.json({ ok: false, error: 'not found' }, 404);
     return c.json({ ok: true, data: s });
+  });
+
+  const WEBAPP_URL = 'https://choutuan.telesearch.workers.dev';
+  async function tgApi(token, method, payload) {
+    try {
+      const r = await fetch(`https://api.telegram.org/bot${token}/${method}`, {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      return await r.json().catch(() => ({}));
+    } catch (e) { console.error('tgApi fail', method, e); return {}; }
+  }
+  // Telegram Bot webhook: BotFather 设 webhook 到此地址后, /start 即有反应
+  app.get('/api/telegram-webhook', (c) => c.json({ ok: true, usage: 'POST Telegram updates here' }));
+  app.post('/api/telegram-webhook', async (c) => {
+    const token = c.env?.BOT_TOKEN || (typeof process !== 'undefined' ? process.env?.BOT_TOKEN : '');
+    let update;
+    try { update = await c.req.json(); } catch { return c.json({ ok: false, error: 'bad json' }, 400); }
+    const msg = update?.message;
+    const chatId = msg?.chat?.id;
+    if (!chatId) return c.json({ ok: true });
+    if (!token || token === 'YOUR_BOT_TOKEN_HERE') { console.error('BOT_TOKEN missing, skip reply'); return c.json({ ok: true }); }
+    const text = (msg?.text || '').trim();
+    const isStart = text.startsWith('/start');
+    await tgApi(token, 'sendMessage', {
+      chat_id: chatId,
+      text: isStart ? '欢迎来到丑团 choutuan,同城好店点开即看 👇' : '点下面进丑团看同城好店 👇',
+      reply_markup: { inline_keyboard: [[{ text: '打开丑团', web_app: { url: WEBAPP_URL } }]] },
+    });
+    return c.json({ ok: true });
   });
 
   return app;
