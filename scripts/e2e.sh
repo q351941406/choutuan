@@ -51,7 +51,7 @@ fi
 echo "--- 3/5 Menu Button ---"
 MB="$(api getChatMenuButton '{}')"
 echo "$MB" | head -c 300; echo
-echo "$MB" | python3 -c "import sys,json; d=json.load(sys.stdin)['result']; w=(d.get('menu_button') or {}).get('web_app',{}).get('url',''); print('menu_webapp=%s' % w)"
+echo "$MB" | python3 -c "import sys,json; d=json.load(sys.stdin)['result']; w=(d.get('web_app') or {}).get('url',''); print('menu_webapp=%s' % w)"
 echo "--- 4/5 收发往返 (test chat) ---"
 if [ -z "$CHAT" ]; then echo "SKIP: 无 E2E_CHAT_ID, 跳过收发 (其它项已验证)"; echo "E2E PASS(basic)"; exit 0; fi
 TS="$(date -u +%FT%TZ)"
@@ -60,5 +60,5 @@ MID="$(echo "$SENT" | python3 -c "import sys,json; d=json.load(sys.stdin); asser
 echo "sent message_id=$MID"
 api deleteMessage "{\"chat_id\":\"$CHAT\",\"message_id\":$MID}" | head -c 120; echo; echo "send+delete ok (已清理)"
 echo "--- 5/5 /start 全链路 (合成update打线上webhook, 会向测试chat落一条欢迎语) ---"
-curl -sf --max-time 20 "$WEBAPP/api/telegram-webhook" -H 'content-type: application/json' -d "{\"message\":{\"chat\":{\"id\":$CHAT},\"text\":\"/start\"}}" | head -c 120; echo
+curl -sf --max-time 20 "$URL_WANT" -H 'content-type: application/json' -d "{\"message\":{\"chat\":{\"id\":$CHAT},\"text\":\"/start\"}}" | head -c 120; echo
 echo "E2E PASS(full)"
