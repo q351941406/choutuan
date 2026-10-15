@@ -16,6 +16,21 @@ echo "token: SET(len=${#TOKEN}) chat: ${CHAT:-MISSING} webapp: $WEBAPP"
 api() { # $1=method $2=json(不回显) ; 成功打印body, 失败返回非零
   curl -sf --max-time 20 "https://api.telegram.org/bot${TOKEN}/$1" -H 'content-type: application/json' -d "$2"
 }
+echo "--- 0/5 chat 自动发现 (无TEST_CHAT_ID时调getUpdates) ---"
+if [ -z "$CHAT" ]; then
+  UPD="$(api getUpdates '{"timeout":5,"limit":20}' 2>/dev/null || true)"
+  CHAT="$(echo "$UPD" | python3 -c "
+import sys,json
+try:
+  rs = json.load(sys.stdin).get('result', [])
+  ms = [u.get('message') or u.get('edited_message') or {} for u in rs]
+  ms = [m for m in ms if m.get('chat',{}).get('id')]
+  print(ms[-1]['chat']['id'] if ms else '')
+except Exception:
+  print('')")"
+  if [ -n "$CHAT" ]; then echo "发现 chat_id=$CHAT (来自最近一条消息, 记到secrets文件即可一劳永逸)"
+  else echo "未发现聊天: 给测试Bot发任意一句话后重跑 (Telegram规定bot不能主动找人, 这是唯一一次需要人手的10秒动作)"; fi
+fi
 echo "--- 1/5 getMe (token 有效性) ---"
 ME="$(api getMe '{}')"
 echo "$ME" | python3 -c "import sys,json; d=json.load(sys.stdin); assert d.get('ok'), d; u=d['result']; print('bot: @%s id=%s' % (u.get('username'), u.get('id')))"
