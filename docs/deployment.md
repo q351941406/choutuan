@@ -51,3 +51,5 @@ curl -s --get --data-urlencode "category=美食" https://choutuan.telesearch.wor
 
 `@BotFather → /mybots → @choutuan_bot → Bot Settings → Menu Button →
 Configure Menu Button →` 填线上 URL。Telegram 缓存重, 改完等 1-2 分钟或重进 Bot。
+
+# touch to retrigger guard
