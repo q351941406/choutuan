@@ -62,3 +62,14 @@ BOT_TOKEN=xxx bash scripts/bot-webhook.sh                # 设 webhook + Menu Bu
 轮询断言欢迎语 + web_app 按钮 → 查线上 health → PASS/FAIL。
 安全: StringSession = 完整账号权限, 必须测试专用号; 跑完可去官方客户端
 「设置 → 设备」终止该会话; 泄露即换号, 别复用。
+
+## 测试资产清单 (跟着项目走, 2026-10-15 落定)
+
+- 测试用户号: id `8924350312` (协议号, StringSession, 测试专用)
+- 测试 Bot: `@choutuan_t39714_bot` (BotFather 自动建, 归测试号所有)
+- 线上 `BOT_TOKEN` secret: 当前 = 测试 Bot (生产 `@choutuan_bot` 接线时换生产 Token 重跑 `bot-webhook.sh`)
+- 本地: `/workspace/.choutuan-secrets` (`TG_API_ID/TG_API_HASH/TG_STRING_SESSION`, 600) +
+  `/workspace/.choutuan-tg/` (`account.json`/`test_bot_token`, 700), 都在仓库之外
+- CI: GitHub Secrets `TG_API_ID` / `TG_API_HASH` / `TG_STRING_SESSION` /
+  `BOT_TOKEN`(测试) / `TEST_CHAT_ID`(`8924350312`), CD 发版后自动跑用户号全链路
+- 生产 Bot Token 从未进仓; 换生产接线只需换线上 secret + 重设 webhook, 代码不动

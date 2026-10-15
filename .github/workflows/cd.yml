@@ -34,6 +34,13 @@ jobs:
           curl -sf --retry 5 --retry-delay 5 --retry-all-errors --get --data-urlencode "category=美食" https://choutuan.telesearch.workers.dev/api/shops | tee /tmp/shops.json | grep -q '"total"'
           curl -sf --retry 5 --retry-delay 5 --retry-all-errors https://choutuan.telesearch.workers.dev/api/categories | tee /tmp/cats.json | grep -q '"全部"'
           echo "smoke-ok"
+      - name: 用户号全链路e2e (无secrets时SKIP, 有则强制)
+        env:
+          TG_API_ID: ${{ secrets.TG_API_ID }}
+          TG_API_HASH: ${{ secrets.TG_API_HASH }}
+          TG_STRING_SESSION: ${{ secrets.TG_STRING_SESSION }}
+          TEST_BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+        run: npm run e2e:tguser
       - name: Telegram e2e (无secrets时SKIP, 有则强制)
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
