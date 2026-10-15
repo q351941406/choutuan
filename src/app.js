@@ -27,7 +27,7 @@ export function createApp() {
   app.use('/api/*', cors());
 
   app.get('/api/health', (c) => c.json({
-    ok: true, name: 'choutuan 丑团', version: '0.9.0',
+    ok: true, name: 'choutuan 丑团', version: '0.9.1',
     runtime: c.env?.DB ? 'cloudflare-workers+d1' : 'node-memory',
     time: new Date().toISOString(),
   }));
@@ -53,11 +53,13 @@ export function createApp() {
   app.get('/api/shops', async (c) => {
     const category = c.req.query('category') || '';
     const q = c.req.query('q') || '';
+    const glat = parseFloat(c.req.query('lat')), glng = parseFloat(c.req.query('lng'));
+    const geo = Number.isFinite(glat) && Number.isFinite(glng) && Math.abs(glat) <= 90 && Math.abs(glng) <= 180;
     try {
       if (c.env?.DB) {
-        // 免费KV写只有1000/天: 只缓存无q请求, 有q直接查库不写KV
+        // 免费KV写只有1000/天: 只缓存无q无坐标请求; 有q或带坐标(一人一序)直接查库不写KV
         const cacheKey = `shops:v2:${category || 'ALL'}`;
-        if (!q && c.env?.CACHE) {
+        if (!q && !geo && c.env?.CACHE) {
           const hit = await c.env.CACHE.get(cacheKey, 'json');
           if (hit) return c.json({ ok: true, total: hit.length, data: hit, cached: true });
         }
@@ -66,14 +68,14 @@ export function createApp() {
         if (category && category !== '全部') { conds.push('category = ?'); params.push(category); }
         if (q) { conds.push('(name LIKE ? OR address LIKE ? OR category LIKE ?)'); params.push(`%${q}%`, `%${q}%`, `%${q}%`); }
         if (conds.length) sql += ' WHERE ' + conds.join(' AND ');
-        sql += ' ORDER BY rating DESC LIMIT 100';
+        if (geo) { sql += ' ORDER BY ((lat - ?) * (lat - ?) + (lng - ?) * (lng - ?)) LIMIT 100'; params.push(glat, glat, glng, glng); } else sql += ' ORDER BY rating DESC LIMIT 100';
         const rs = await c.env.DB.prepare(sql).bind(...params).all();
         const data = rs.results.map(mapRow);
-        if (!q && c.env?.CACHE) await c.env.CACHE.put(cacheKey, JSON.stringify(data), { expirationTtl: 600 });
+        if (!q && !geo && c.env?.CACHE) await c.env.CACHE.put(cacheKey, JSON.stringify(data), { expirationTtl: 600 });
         return c.json({ ok: true, total: data.length, data });
       }
     } catch (e) { console.error('shops d1 fail, fallback mem', e); }
-    const data = filterMem(category, q);
+    const data = filterMem(category, q);if (geo) data.sort(function(a,b){var x=(a.lat-glat)*(a.lat-glat)+(a.lng-glng)*(a.lng-glng);var y=(b.lat-glat)*(b.lat-glat)+(b.lng-glng)*(b.lng-glng);return x-y;});
     return c.json({ ok: true, total: data.length, data });
   });
 
