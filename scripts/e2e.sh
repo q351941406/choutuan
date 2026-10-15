@@ -38,7 +38,12 @@ echo "--- 2/5 webhook 指向 ---"
 WH="$(api getWebhookInfo '{}')"
 echo "$WH" | python3 -c "import sys,json; d=json.load(sys.stdin)['result']; print('url=%s pending=%s last_error=%s' % (d.get('url'), d.get('pending_update_count'), d.get('last_error_message')))"
 URL_NOW="$(echo "$WH" | python3 -c "import sys,json; print(json.load(sys.stdin)['result'].get('url',''))")"
-URL_WANT="$WEBAPP/api/telegram-webhook"
+# 期望地址: 优先显式传入, 否则按双hook路由从 wrangler.toml 自读测试专道
+if [ -z "${E2E_WEBHOOK_URL:-}" ] && [ -f wrangler.toml ]; then
+  _HOOK_TEST="$(grep '^HOOK_TEST' wrangler.toml | cut -d'"' -f2)"
+  [ -n "$_HOOK_TEST" ] && E2E_WEBHOOK_URL="$WEBAPP/api/tg/$_HOOK_TEST"
+fi
+URL_WANT="${E2E_WEBHOOK_URL:-$WEBAPP/api/telegram-webhook}"
 if [ "$URL_NOW" != "$URL_WANT" ]; then
   if [ "$FIX" = 1 ]; then echo "webhook 不一致, 修复中..."; api setWebhook "{\"url\":\"$URL_WANT\",\"allowed_updates\":[\"message\"]}" | head -c 120; echo
   else echo "E2E FAIL: webhook=$URL_NOW 期望=$URL_WANT (置 E2E_SET_WEBHOOK=1 自动修复)"; exit 1; fi
