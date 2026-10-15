@@ -7,7 +7,19 @@
 - R2 `choutuan-images` / preview, Worker `choutuan` → https://choutuan.telesearch.workers.dev
 - 配置全在 `wrangler.toml`, 改绑定必须同步改此文件并提交。
 
-## 分支与环境
+## 分支与环境 (含保护状态, 2026-10-15实测)
+
+- `main`: 集成, 推了只跑 CI。
+- `production`: 发版, 推了跑 CI + CD, 线上 Worker 只认它。
+- 默认分支保持 `main`, `production` 常驻不删。
+- 硬分支保护: 开不了。私有仓 + Free 计划调保护 API 直接 403
+  (`Upgrade to GitHub Pro or make this repository public`), Rulesets 同理。
+  要硬保护二选一: 仓库改公开 (免费即有), 或升级 Pro/Team。
+- 已落地的软保护 (不用花钱):
+  1. `production` 环境门禁: 已设 `custom_branch_policies=[production]`,
+     只有 `production` 分支能往 production 环境部署, `main` 推了也不会发版。
+  2. `guard` 工作流: 推 `production` 时断言它包含 `main`, 分叉直接红。
+  3. `CODEOWNERS`: 所有改动 @q351941406 为默认 reviewer。
 
 - `main`: 集成, 推了只跑 CI。
 - `production`: 发版, 推了跑 CI + CD, 线上 Worker 只认它。

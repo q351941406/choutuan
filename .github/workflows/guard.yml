@@ -1,0 +1,24 @@
+name: guard
+on:
+  push:
+    branches: [main, production]
+  pull_request:
+jobs:
+  flow:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: production必须包含main (防分叉)
+        if: github.ref == 'refs/heads/production'
+        run: |
+          git fetch origin main:refs/remotes/origin/main
+          if git merge-base --is-ancestor origin/main origin/production; then
+            echo "flow-ok: production contains main"
+          else
+            echo "::error::production 分支不包含 main, 说明有提交绕过 main 直接上了 production。请走 main → PR → production, 热修也要回灌 main。"
+            exit 1
+          fi
+      - name: 提醒硬保护状态
+        run: echo "note: 私有仓+Free计划无硬分支保护, 靠 CODEOWNERS + 本守卫 + production环境门禁(仅production分支可部署) 约束, 详见 docs/deployment.md"
