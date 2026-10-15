@@ -8,9 +8,9 @@ cd "$(dirname "$0")/.."
 need() { command -v "$1" >/dev/null 2>&1 || { echo "缺 $1, 先装"; exit 1; }; }
 need node; need npm; need npx
 
-# Bot 自治验证约定 (可选): 测试 Bot Token 与测试 chat 只放环境变量或以下两个文件之一, 永不进 git
+# 测试密钥加载顺序 (后者覆盖前者): 仓库自带 config/test-secrets.env (测试专用, 有意提交) < 沙盒文件 < 环境变量
 #   /workspace/.choutuan-secrets  或  $HOME/.config/choutuan/secrets.env  (格式 BOT_TOKEN=xxx / TEST_CHAT_ID=123)
-for f in /workspace/.choutuan-secrets "$HOME/.config/choutuan/secrets.env"; do
+for f in config/test-secrets.env /workspace/.choutuan-secrets "$HOME/.config/choutuan/secrets.env"; do
   [ -f "$f" ] && { echo "load secrets: $f (只看有没有,不打印值)"; set -a; . "$f"; set +a; }
 done
 
