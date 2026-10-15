@@ -15,6 +15,8 @@ echo "--- setWebhook ---"
 api setWebhook "{\"url\":\"${WEBAPP_URL}/api/tg/${HOOK}\",\"allowed_updates\":[\"message\"]}" | head -c 200; echo
 echo "--- setChatMenuButton(web_app) ---"
 api setChatMenuButton "{\"menu_button\":{\"type\":\"web_app\",\"text\":\"打开丑团\",\"web_app\":{\"url\":\"${WEBAPP_URL}\"}}}" | head -c 200; echo
+echo "--- setMyCommands(/start) ---"
+api setMyCommands "{\"commands\":[{\"command\":\"start\",\"description\":\"打开丑团\"}]}" | head -c 200; echo
 echo "--- getWebhookInfo ---"
 curl -sf "https://api.telegram.org/bot${BOT_TOKEN}/getWebhookInfo" | head -c 400; echo
 echo "done. 去 Bot 里发 /start 验证。"
