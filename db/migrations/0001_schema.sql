@@ -12,7 +12,6 @@ CREATE TABLE IF NOT EXISTS shops (
   hours TEXT NOT NULL,
   phone TEXT NOT NULL,
   metro TEXT NOT NULL,
-  city TEXT NOT NULL DEFAULT '深圳',
   emoji TEXT NOT NULL,
   tags_json TEXT NOT NULL DEFAULT '[]',
   signature_json TEXT NOT NULL DEFAULT '[]',
@@ -25,5 +24,3 @@ CREATE TABLE IF NOT EXISTS shops (
 CREATE INDEX IF NOT EXISTS idx_shops_category ON shops(category);
 CREATE INDEX IF NOT EXISTS idx_shops_name ON shops(name);
 CREATE INDEX IF NOT EXISTS idx_shops_geohash ON shops(geohash);
-CREATE INDEX IF NOT EXISTS idx_shops_city ON shops(city);
-CREATE INDEX IF NOT EXISTS idx_shops_city_category ON shops(city, category);
