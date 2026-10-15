@@ -8,3 +8,4 @@ node_modules/
 .wrangler/state/
 dev.db*
 *.sqlite*
+actionlint
