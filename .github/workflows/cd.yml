@@ -34,3 +34,8 @@ jobs:
           curl -sf --retry 5 --retry-delay 5 --retry-all-errors --get --data-urlencode "category=美食" https://choutuan.telesearch.workers.dev/api/shops | tee /tmp/shops.json | grep -q '"total"'
           curl -sf --retry 5 --retry-delay 5 --retry-all-errors https://choutuan.telesearch.workers.dev/api/categories | tee /tmp/cats.json | grep -q '"全部"'
           echo "smoke-ok"
+      - name: Telegram e2e (无secrets时SKIP, 有则强制)
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          TEST_CHAT_ID: ${{ secrets.TEST_CHAT_ID }}
+        run: bash scripts/e2e.sh
