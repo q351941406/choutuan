@@ -37,7 +37,7 @@
 .t{font-size:13px;color:var(--hint);padding:16px 32px 6px}
 .mainbtn{margin:16px;background:var(--btn);color:var(--btnTx);text-align:center;border-radius:10px;padding:13px;font-size:16px;border:0;width:calc(100% - 32px)}
 .ghost{margin:0 16px;width:calc(100% - 32px);border:.5px solid var(--line);text-align:center;border-radius:10px;padding:11px;font-size:15px;color:var(--link);background:var(--bg)}
-.loading,.empty{padding:30px;text-align:center;color:var(--hint);font-size:14px}
+.loading,.empty{padding:30px;text-align:center;color:var(--hint);font-size:14px}.intg #detail>.nav{display:none}.intg #home>.nav{padding-top:6px}.intg #home .nav-top{display:none}
 </style>
 </head>
 <body>
@@ -59,7 +59,7 @@
 </div>
 <script>
 const tg = window.Telegram?.WebApp; let cur=null;
-try{tg?.ready();tg?.expand();}catch(e){}
+var inTG=false;try{inTG=!!(tg&&tg.initData);}catch(_e){}try{if(inTG){document.body.classList.add('intg');tg.ready();tg.expand();tg.setHeaderColor('bg_color');tg.setBackgroundColor('bg_color');tg.disableVerticalSwipes();}else{tg.ready();tg.expand();}}catch(e){}
 function applyTheme(){try{const p=tg?.themeParams||{};if(p.bg_color)document.documentElement.style.setProperty('--bg',p.bg_color);if(p.secondary_bg_color)document.documentElement.style.setProperty('--bg2',p.secondary_bg_color);if(p.text_color)document.documentElement.style.setProperty('--text',p.text_color);if(p.hint_color)document.documentElement.style.setProperty('--hint',p.hint_color);if(p.link_color){document.documentElement.style.setProperty('--link',p.link_color);document.documentElement.style.setProperty('--btn',p.button_color||p.link_color);}if(p.button_text_color)document.documentElement.style.setProperty('--btnTx',p.button_text_color);}catch(e){}}
 applyTheme();try{tg?.onEvent('themeChanged',applyTheme);}catch(e){}
 try{const u=tg?.initDataUnsafe?.user;if(u)document.getElementById('hello').textContent='你好, '+(u.first_name||'丑团食客')+' · 同城好店 · 仅展示';}catch(e){}

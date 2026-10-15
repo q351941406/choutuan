@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.7.1 (2026-10-15)
+- 单导航栏: TG 客户端内隐藏自绘顶栏 (只留原生头 + 系统返回键), 浏览器调试保持原样; 头/底色跟随主题, 禁掉下拉误关。
+
+
 ## v0.7.0 (2026-10-15)
 - Bot 有反应了: 新增 `POST /api/telegram-webhook`, `/start` 回带 web_app 按钮的欢迎语, 其他消息回进店引导。
 - `scripts/bot-webhook.sh`: 一键设 webhook + Menu Button (Token 只读环境变量)。
