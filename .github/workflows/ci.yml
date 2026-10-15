@@ -22,10 +22,10 @@ jobs:
       - name: Node内存API冒烟 (3002端口, 起完即停)
         run: |
           PORT=3002 node src/node-server.js & echo $! > /tmp/srv.pid
-          sleep 3
-          curl -sf http://localhost:3002/api/health | grep -q '"ok":true'
-          curl -sf "http://localhost:3002/api/shops?category=美食" | grep -q '"total"'
-          curl -sf http://localhost:3002/api/categories | grep -q '"全部"'
+          sleep 4
+          curl -sf http://localhost:3002/api/health | tee /tmp/health.json | grep -q '"ok":true'
+          curl -sf --get --data-urlencode "category=美食" http://localhost:3002/api/shops | tee /tmp/shops.json | grep -q '"total"'
+          curl -sf http://localhost:3002/api/categories | tee /tmp/cats.json | grep -q '"全部"'
           kill "$(cat /tmp/srv.pid)"
       - name: CF部署预演
         run: npx wrangler deploy --dry-run

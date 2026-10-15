@@ -11,7 +11,7 @@ KV 读10万/写删列各1000/天 (存1GB), R2 存10GB + A类100万/B类1000万/�
 
 ```bash
 curl -s https://choutuan.telesearch.workers.dev/api/health
-curl -s "https://choutuan.telesearch.workers.dev/api/shops?category=美食" | grep -o '"cached":[a-z]*'
+curl -s --get --data-urlencode "category=美食" https://choutuan.telesearch.workers.dev/api/shops | grep -o '"cached":[a-z]*'
 npx wrangler tail --format pretty   # 看线上错
 ```
 

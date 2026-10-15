@@ -16,7 +16,7 @@ npx wrangler d1 execute choutuan-db --remote --command="SELECT count(*) as shops
 npm run deploy:dry                  # 预演
 npm run deploy                      # 发版
 curl -s https://choutuan.telesearch.workers.dev/api/health
-curl -s "https://choutuan.telesearch.workers.dev/api/shops?category=美食" | head -c 200
+curl -s --get --data-urlencode "category=美食" https://choutuan.telesearch.workers.dev/api/shops | head -c 200
 ```
 
 ## 回滚
