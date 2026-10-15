@@ -9,14 +9,14 @@ function mapRow(r) {
     id: r.id, name: r.name, category: r.category,
     rating: r.rating, sales: r.sales, per: r.per_capita,
     dist: r.dist_text, address: r.address, hours: r.hours,
-    phone: r.phone, metro: r.metro, emoji: r.emoji,
+    phone: r.phone, metro: r.metro, city: r.city || '', emoji: r.emoji,
     tags: JSON.parse(r.tags_json || '[]'),
     signature: JSON.parse(r.signature_json || '[]'),
     reviews: JSON.parse(r.reviews_json || '[]'), lat: r.lat || 0, lng: r.lng || 0,
   };
 }
-function filterMem(category, q) {
-  let list = memShops;
+function filterMem(category, q, city) {
+  let list = memShops;if (city) list = list.filter(function(s){return s.city === city;});
   if (category && category !== '全部') list = list.filter(s => s.category === category);
   if (q) list = list.filter(s => (s.name + s.address + s.category + (s.tags||[]).join('')).includes(q));
   return list;
@@ -27,7 +27,7 @@ export function createApp() {
   app.use('/api/*', cors());
 
   app.get('/api/health', (c) => c.json({
-    ok: true, name: 'choutuan 丑团', version: '0.9.1',
+    ok: true, name: 'choutuan 丑团', version: '0.10.0',
     runtime: c.env?.DB ? 'cloudflare-workers+d1' : 'node-memory',
     time: new Date().toISOString(),
   }));
@@ -37,35 +37,36 @@ export function createApp() {
       if (c.env?.DB) {
         // KV 缓存 10 分钟, 写极少
         if (c.env?.CACHE) {
-          const hit = await c.env.CACHE.get('cats:v1', 'json');
+          const ccity = c.req.query('city') || '';const ckey = 'cats:v3:' + (ccity || 'ALL');const hit = await c.env.CACHE.get(ckey, 'json');
           if (hit) return c.json({ ok: true, data: hit, cached: true });
         }
-        const rs = await c.env.DB.prepare('SELECT DISTINCT category FROM shops').all();
+        const csql = ccity ? 'SELECT DISTINCT category FROM shops WHERE city = ?' : 'SELECT DISTINCT category FROM shops';const rs = ccity ? await c.env.DB.prepare(csql).bind(ccity).all() : await c.env.DB.prepare(csql).all();
         const cats = ['全部', ...rs.results.map(r => r.category)];
-        if (c.env?.CACHE) await c.env.CACHE.put('cats:v1', JSON.stringify(cats), { expirationTtl: 600 });
+        if (c.env?.CACHE) await c.env.CACHE.put(ckey, JSON.stringify(cats), { expirationTtl: 600 });
         return c.json({ ok: true, data: cats });
       }
     } catch (e) { console.error('categories d1 fail, fallback mem', e); }
-    const cats = ['全部', ...new Set(memShops.map(s => s.category))];
+    const cats = ['全部', ...new Set((c.req.query('city')?memShops.filter(s=>s.city===c.req.query('city')):memShops).map(s => s.category))];
     return c.json({ ok: true, data: cats });
   });
 
   app.get('/api/shops', async (c) => {
     const category = c.req.query('category') || '';
+    const city = c.req.query('city') || '';
     const q = c.req.query('q') || '';
     const glat = parseFloat(c.req.query('lat')), glng = parseFloat(c.req.query('lng'));
     const geo = Number.isFinite(glat) && Number.isFinite(glng) && Math.abs(glat) <= 90 && Math.abs(glng) <= 180;
     try {
       if (c.env?.DB) {
         // 免费KV写只有1000/天: 只缓存无q无坐标请求; 有q或带坐标(一人一序)直接查库不写KV
-        const cacheKey = `shops:v2:${category || 'ALL'}`;
+        const cacheKey = 'shops:v3:' + (city || 'ALL') + ':' + (category || 'ALL');
         if (!q && !geo && c.env?.CACHE) {
           const hit = await c.env.CACHE.get(cacheKey, 'json');
           if (hit) return c.json({ ok: true, total: hit.length, data: hit, cached: true });
         }
         let sql = 'SELECT * FROM shops';
         const conds = [], params = [];
-        if (category && category !== '全部') { conds.push('category = ?'); params.push(category); }
+        if (category && category !== '全部') { conds.push('category = ?'); params.push(category); }if (city) { conds.push('city = ?'); params.push(city); }
         if (q) { conds.push('(name LIKE ? OR address LIKE ? OR category LIKE ?)'); params.push(`%${q}%`, `%${q}%`, `%${q}%`); }
         if (conds.length) sql += ' WHERE ' + conds.join(' AND ');
         if (geo) { sql += ' ORDER BY ((lat - ?) * (lat - ?) + (lng - ?) * (lng - ?)) LIMIT 100'; params.push(glat, glat, glng, glng); } else sql += ' ORDER BY rating DESC LIMIT 100';
@@ -75,7 +76,7 @@ export function createApp() {
         return c.json({ ok: true, total: data.length, data });
       }
     } catch (e) { console.error('shops d1 fail, fallback mem', e); }
-    const data = filterMem(category, q);if (geo) data.sort(function(a,b){var x=(a.lat-glat)*(a.lat-glat)+(a.lng-glng)*(a.lng-glng);var y=(b.lat-glat)*(b.lat-glat)+(b.lng-glng)*(b.lng-glng);return x-y;});
+    const data = filterMem(category, q, city);if (geo) data.sort(function(a,b){var x=(a.lat-glat)*(a.lat-glat)+(a.lng-glng)*(a.lng-glng);var y=(b.lat-glat)*(b.lat-glat)+(b.lng-glng)*(b.lng-glng);return x-y;});
     return c.json({ ok: true, total: data.length, data });
   });
 
