@@ -21,4 +21,5 @@ jobs:
             exit 1
           fi
       - name: 提醒硬保护状态
-        run: echo "note: 私有仓+Free计划无硬分支保护, 靠 CODEOWNERS + 本守卫 + production环境门禁(仅production分支可部署) 约束, 详见 docs/deployment.md"
+        run: |
+          echo "note: 私有仓+Free计划无硬分支保护, 靠 CODEOWNERS + 本守卫 + production环境门禁(仅production分支可部署) 约束, 详见 docs/deployment.md"
