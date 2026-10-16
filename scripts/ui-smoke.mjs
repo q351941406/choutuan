@@ -19,7 +19,7 @@ const dom = new JSDOM(html, {
   url: 'http://localhost/',
   pretendToBeVisual: true,
   runScripts: 'dangerously',
-  beforeParse: function(w) { w.fetch = fakeFetch; w.Telegram = { WebApp: { platform: 'android', initDataUnsafe: { user: { id: 123, first_name: 'T' } } } }; }
+  beforeParse: function(w) { w.fetch = fakeFetch; w.Telegram = { WebApp: { platform: 'android', initData: 'x=1', initDataUnsafe: { user: { id: 123, first_name: 'T' } } } }; }
 });
 const tick = function(ms) { return new Promise(function(r) { setTimeout(r, ms); }); };
 await tick(400);

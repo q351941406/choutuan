@@ -10,3 +10,7 @@
    前端 `innerHTML` 只渲染受信 seed 数据, 用户输入用 `textContent`。
 5. **依赖与 CI**: `npm audit` 高危必修, `ci.yml` 每次 push 跑 `check + seed 一致性 + deploy dry-run`。
 6. **公开面**: 私有仓 + 线上 API 只暴露读接口, 写接口默认 403, 开白名单才放行。
+
+## initData 验签 (v0.12.0 起)
+写接口(/api/venue)强制验 Telegram WebApp 签名: HMAC(WebAppData, token)->HMAC(dcs), auth_date 24h 内, user 取自签名内(客户端传的 user_id 一律忽略, 只能发给自己)。
+读接口保持公开(公开展示数据, 无需鉴权)。

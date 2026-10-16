@@ -1,4 +1,5 @@
 # Changelog
+## v0.12.0 - initData验签, venue只能发给自己
 ## v0.11.1 - 欢迎语带直链t.me/choutuan_bot/choutuan
 ## v0.11.0 - 自有域名choutuan.2453452242.shop
 ## v0.10.3 - 选单关闭动画+系统地图+发到聊天TG内置地图

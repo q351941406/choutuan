@@ -27,7 +27,7 @@ export function createApp() {
   app.use('/api/*', cors());
 
   app.get('/api/health', (c) => c.json({
-    ok: true, name: 'choutuan 丑团', version: '0.11.1',
+    ok: true, name: 'choutuan 丑团', version: '0.12.0',
     runtime: c.env?.DB ? 'cloudflare-workers+d1' : 'node-memory',
     time: new Date().toISOString(),
   }));
@@ -147,5 +147,65 @@ export function createApp() {
     return c.json({ ok: true });
   });
 
-  app.post('/api/venue', async (c) => { let b; try { b = await c.req.json(); } catch { return c.json({ ok: false, error: 'bad json' }, 400); } const uid = Number(b?.user_id) || 0; const sid = String(b?.shop_id || ''); if (!uid || !sid) return c.json({ ok: false, error: 'bad args' }, 400); let shop = null; try { if (c.env?.DB) { const r = await c.env.DB.prepare('SELECT * FROM shops WHERE id = ?').bind(sid).first(); if (r) shop = mapRow(r); } } catch (e) { console.error('venue d1 fail', e); } if (!shop) shop = memShops.find((s) => s.id === sid) || null; if (!shop || !shop.lat || !shop.lng) return c.json({ ok: false, error: 'no coords' }, 404); const toks = [c.env?.BOT_TOKEN, c.env?.TEST_BOT_TOKEN].filter(Boolean); for (const tk of toks) { const r = await tgApi(tk, 'sendVenue', { chat_id: uid, latitude: shop.lat, longitude: shop.lng, title: shop.name, address: shop.address }); if (r && r.ok) return c.json({ ok: true }); } return c.json({ ok: false, error: 'send failed' }, 502); });  return app;
+  const te = new TextEncoder();
+  async function hmacHex(keyBytes, msg) {
+    const k = await crypto.subtle.importKey('raw', keyBytes, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+    const s = await crypto.subtle.sign('HMAC', k, te.encode(msg));
+    return Array.from(new Uint8Array(s)).map((b) => b.toString(16).padStart(2, '0')).join('');
+  }
+  function botTokens(c) {
+    const out = [];
+    try {
+      const env = c.env || {};
+      if (env.BOT_TOKEN) out.push(env.BOT_TOKEN);
+      if (env.TEST_BOT_TOKEN) out.push(env.TEST_BOT_TOKEN);
+      const g = (typeof process !== 'undefined' && process.env) || {};
+      if (g.BOT_TOKEN) out.push(g.BOT_TOKEN);
+      if (g.TEST_BOT_TOKEN) out.push(g.TEST_BOT_TOKEN);
+    } catch {}
+    return [...new Set(out)].filter(Boolean);
+  }
+  async function validateInitData(initData, tokens) {
+    try {
+      const p = new URLSearchParams(initData || '');
+      const hash = p.get('hash');
+      if (!hash || !tokens.length) return null;
+      const ad = Number(p.get('auth_date') || 0);
+      if (!ad || Math.abs(Date.now() / 1000 - ad) > 86400) return null;
+      const ks = [];
+      p.forEach((v, k) => { if (k !== 'hash') ks.push(k); });
+      ks.sort();
+      const dcs = ks.map((k) => k + '=' + p.get(k)).join('\n');
+      let user = null;
+      try { user = JSON.parse(p.get('user') || 'null'); } catch {}
+      if (!user || !user.id) return null;
+      for (const tk of tokens) {
+        const sk = await crypto.subtle.importKey('raw', te.encode('WebAppData'), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+        const secret = new Uint8Array(await crypto.subtle.sign('HMAC', sk, te.encode(tk)));
+        const sig = await hmacHex(secret, dcs);
+        let ok = sig.length === hash.length;
+        for (let i = 0; i < sig.length && i < hash.length; i++) { if (sig[i] !== hash[i]) ok = false; }
+        if (ok) return user;
+      }
+      return null;
+    } catch { return null; }
+  }
+  app.post('/api/venue', async (c) => {
+    let b;
+    try { b = await c.req.json(); } catch { return c.json({ ok: false, error: 'bad json' }, 400); }
+    const sid = String(b?.shop_id || '');
+    if (!sid) return c.json({ ok: false, error: 'bad args' }, 400);
+    const user = await validateInitData(String(b?.init_data || ''), botTokens(c));
+    if (!user) return c.json({ ok: false, error: 'bad initdata' }, 401);
+    const uid = Number(user.id);
+    let shop = null;
+    try { if (c.env?.DB) { const r = await c.env.DB.prepare('SELECT * FROM shops WHERE id = ?').bind(sid).first(); if (r) shop = mapRow(r); } } catch (e) { console.error('venue d1 fail', e); }
+    if (!shop) shop = memShops.find((s) => s.id === sid) || null;
+    if (!shop || !shop.lat || !shop.lng) return c.json({ ok: false, error: 'no coords' }, 404);
+    const toks = botTokens(c);
+    for (const tk of toks) {
+      const r = await tgApi(tk, 'sendVenue', { chat_id: uid, latitude: shop.lat, longitude: shop.lng, title: shop.name, address: shop.address });
+      if (r && r.ok) return c.json({ ok: true, mid: r.result && r.result.message_id });
+    }
+    return c.json({ ok: false, error: 'send failed' }, 502); });  return app;
 }
