@@ -30,9 +30,9 @@ jobs:
       - name: 线上冒烟 (health + 列表 + 分类, 带全球传播重试)
         run: |
           sleep 15
-          curl -sf --retry 5 --retry-delay 5 --retry-all-errors https://choutuan.telesearch.workers.dev/api/health | tee /tmp/health.json | grep -q '"ok":true'
-          curl -sf --retry 5 --retry-delay 5 --retry-all-errors --get --data-urlencode "category=美食" https://choutuan.telesearch.workers.dev/api/shops | tee /tmp/shops.json | grep -q '"total"'
-          curl -sf --retry 5 --retry-delay 5 --retry-all-errors https://choutuan.telesearch.workers.dev/api/categories | tee /tmp/cats.json | grep -q '"全部"'
+          curl -sf --retry 5 --retry-delay 5 --retry-all-errors https://choutuan.2453452242.shop/api/health | tee /tmp/health.json | grep -q '"ok":true'
+          curl -sf --retry 5 --retry-delay 5 --retry-all-errors --get --data-urlencode "category=美食" https://choutuan.2453452242.shop/api/shops | tee /tmp/shops.json | grep -q '"total"'
+          curl -sf --retry 5 --retry-delay 5 --retry-all-errors https://choutuan.2453452242.shop/api/categories | tee /tmp/cats.json | grep -q '"全部"'
           echo "smoke-ok"
       - name: 用户号全链路e2e (无secrets时SKIP, 有则强制)
         env:

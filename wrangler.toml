@@ -27,3 +27,7 @@ APP_NAME = "choutuan 丑团"
 
 HOOK_PROD = "d78e5118e06fcba76c9dddf7aead5783"
 HOOK_TEST = "15de7e755fbc68c5a799e2c3b4374d65"
+
+[[routes]]
+pattern = "choutuan.2453452242.shop"
+custom_domain = true

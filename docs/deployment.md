@@ -4,7 +4,7 @@
 
 - D1 `choutuan-db` (`f149b6c1-c0d2-4606-9168-4f8861cc6d92`, WNAM)
 - KV `CACHE` (`10d94612…`) / preview (`571fc218…`)
-- R2 `choutuan-images` / preview, Worker `choutuan` → https://choutuan.telesearch.workers.dev
+- R2 `choutuan-images` / preview, Worker `choutuan` → https://choutuan.2453452242.shop
 - 配置全在 `wrangler.toml`, 改绑定必须同步改此文件并提交。
 
 ## 分支与环境 (含保护状态, 2026-10-15实测)
@@ -36,8 +36,8 @@ npm run db:migrate:remote           # 先迁线上库, 再发代码
 npx wrangler d1 execute choutuan-db --remote --command="SELECT count(*) as shops FROM shops;"
 npm run deploy:dry                  # 预演
 npm run deploy                      # 发版
-curl -s https://choutuan.telesearch.workers.dev/api/health
-curl -s --get --data-urlencode "category=美食" https://choutuan.telesearch.workers.dev/api/shops | head -c 200
+curl -s https://choutuan.2453452242.shop/api/health
+curl -s --get --data-urlencode "category=美食" https://choutuan.2453452242.shop/api/shops | head -c 200
 ```
 
 ## 回滚
@@ -58,7 +58,7 @@ npx wrangler secret put BOT_TOKEN
 # 本地调试: cp .env.example .env 后填入真值
 
 # 2) 设 webhook + Menu Button (Token 只从环境变量读)
-BOT_TOKEN=xxx WEBAPP_URL=https://choutuan.telesearch.workers.dev bash scripts/bot-webhook.sh
+BOT_TOKEN=xxx WEBAPP_URL=https://choutuan.2453452242.shop bash scripts/bot-webhook.sh
 
 # 3) 去 Bot 里发 /start, 应收到带「打开丑团」按钮的欢迎语, 点左下角菜单也能进
 ```

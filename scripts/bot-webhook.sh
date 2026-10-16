@@ -7,7 +7,7 @@ set -euo pipefail
 ROLE="${ROLE:-test}"
 : "${BOT_TOKEN:?请先 export BOT_TOKEN (对应ROLE的token, 不要提交到git)}"
 : "${HOOK:?请先 export HOOK (对应ROLE的hook path id, 见 wrangler.toml)}"
-WEBAPP_URL="${WEBAPP_URL:-https://choutuan.telesearch.workers.dev}"
+WEBAPP_URL="${WEBAPP_URL:-https://choutuan.2453452242.shop}"
 api() { curl -sf "https://api.telegram.org/bot${BOT_TOKEN}/$1" -H 'content-type: application/json' -d "$2"; }
 echo "--- role=$ROLE hook=$HOOK getMe ---"
 api getMe '{"a":1}' | head -c 200; echo

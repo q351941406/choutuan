@@ -4,7 +4,7 @@
 // 输入全走环境变量 (值永不打印), 见 docs/bot-testing.md:
 //   TG_API_ID / TG_API_HASH / TG_STRING_SESSION (协议号三件套, 测试专用号)
 //   TEST_BOT_TOKEN (已有可填, 为空则 BotFather 自动建)
-//   WEBAPP_URL (默认 https://choutuan.telesearch.workers.dev)
+//   WEBAPP_URL (默认 https://choutuan.2453452242.shop)
 // 无 TG_STRING_SESSION 时打印 SKIP exit 0.
 import { TelegramClient } from 'teleproto';
 import { StringSession } from 'teleproto/sessions/index.js';
@@ -32,7 +32,7 @@ if (!s) { console.log('TGUSER SKIP: 无 TG_STRING_SESSION (见 docs/bot-testing.
 const apiId = Number(process.env.TG_API_ID || 0);
 const apiHash = process.env.TG_API_HASH || '';
 if (!apiId || !apiHash) { console.log('TGUSER SKIP: 缺 TG_API_ID/TG_API_HASH'); process.exit(0); }
-const webapp = process.env.WEBAPP_URL || 'https://choutuan.telesearch.workers.dev';
+const webapp = process.env.WEBAPP_URL || 'https://choutuan.2453452242.shop';
 
 const client = new TelegramClient(new StringSession(s), apiId, apiHash, { connectionRetries: 5 });
 console.log('--- 1/6 用户号连接 (已授权会话, 零短信) ---');

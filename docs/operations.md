@@ -10,8 +10,8 @@ KV 读10万/写删列各1000/天 (存1GB), R2 存10GB + A类100万/B类1000万/�
 ## 日常巡检 (5 分钟)
 
 ```bash
-curl -s https://choutuan.telesearch.workers.dev/api/health
-curl -s --get --data-urlencode "category=美食" https://choutuan.telesearch.workers.dev/api/shops | grep -o '"cached":[a-z]*'
+curl -s https://choutuan.2453452242.shop/api/health
+curl -s --get --data-urlencode "category=美食" https://choutuan.2453452242.shop/api/shops | grep -o '"cached":[a-z]*'
 npx wrangler tail --format pretty   # 看线上错
 ```
 

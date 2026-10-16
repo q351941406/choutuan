@@ -27,7 +27,7 @@ export function createApp() {
   app.use('/api/*', cors());
 
   app.get('/api/health', (c) => c.json({
-    ok: true, name: 'choutuan 丑团', version: '0.10.3',
+    ok: true, name: 'choutuan 丑团', version: '0.11.0',
     runtime: c.env?.DB ? 'cloudflare-workers+d1' : 'node-memory',
     time: new Date().toISOString(),
   }));
@@ -100,7 +100,7 @@ export function createApp() {
     return c.json({ ok: true, data: s });
   });
 
-  const WEBAPP_URL = 'https://choutuan.telesearch.workers.dev';
+  const WEBAPP_URL = 'https://choutuan.2453452242.shop';
   async function tgApi(token, method, payload) {
     try {
       const r = await fetch(`https://api.telegram.org/bot${token}/${method}`, {

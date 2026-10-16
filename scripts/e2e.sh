@@ -3,13 +3,13 @@
 # 输入全走环境变量 (见 docs/bot-testing.md):
 #   E2E_BOT_TOKEN (或 BOT_TOKEN)  测试用 Bot Token, 建议用专用测试 Bot
 #   E2E_CHAT_ID (或 TEST_CHAT_ID) 测试聊天 ID (bot 须是成员; 私聊需对方先给 bot 发过任意消息)
-#   E2E_WEBAPP_URL (默认 https://choutuan.telesearch.workers.dev)
+#   E2E_WEBAPP_URL (默认 https://choutuan.2453452242.shop)
 #   E2E_SET_WEBHOOK=1  webhook/menu 与期望不一致时自动修复 (默认只检查不改)
 # 无 Token 时打印 SKIP exit 0 (CD 在 secrets 就绪前保持绿灯, 就绪后自动变强制验证)
 set -euo pipefail
 TOKEN="${E2E_BOT_TOKEN:-${BOT_TOKEN:-}}"
 CHAT="${E2E_CHAT_ID:-${TEST_CHAT_ID:-}}"
-WEBAPP="${E2E_WEBAPP_URL:-https://choutuan.telesearch.workers.dev}"
+WEBAPP="${E2E_WEBAPP_URL:-https://choutuan.2453452242.shop}"
 FIX="${E2E_SET_WEBHOOK:-0}"
 if [ -z "$TOKEN" ]; then echo "E2E SKIP: 无 BOT_TOKEN (按 docs/bot-testing.md 配好后自动验证)"; exit 0; fi
 echo "token: SET(len=${#TOKEN}) chat: ${CHAT:-MISSING} webapp: $WEBAPP"

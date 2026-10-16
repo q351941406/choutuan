@@ -4,7 +4,7 @@
 > 前端是单个 `public/index.html`, Telegram 原生风, 颜色跟随 `themeParams`。
 
 ```
-Telegram 客户端 (@choutuan_bot → Menu Button → https://choutuan.telesearch.workers.dev)
+Telegram 客户端 (@choutuan_bot → Menu Button → https://choutuan.2453452242.shop)
   │  HTTPS + Telegram.WebApp (initData / themeParams / Haptic / BackButton / 分享 / 地图外跳)
   ▼
 Cloudflare Workers `choutuan` (src/worker.js → src/app.js, Hono)

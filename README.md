@@ -2,7 +2,7 @@
 
 > 同城店铺信息展示 · Telegram Mini App · Hono + Cloudflare 全家桶 (私有仓)
 
-Bot: [@choutuan_bot](https://t.me/choutuan_bot) · 线上: https://choutuan.telesearch.workers.dev · 架构见 [docs/architecture.md](docs/architecture.md)
+Bot: [@choutuan_bot](https://t.me/choutuan_bot) · 线上: https://choutuan.2453452242.shop · 架构见 [docs/architecture.md](docs/architecture.md)
 
 ## 这是什么
 

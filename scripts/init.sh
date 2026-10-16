@@ -64,7 +64,7 @@ cat <<'NEXT'
 ✅ init 完成, 现在可以:
   npm run dev     # Node内存, 最快, http://localhost:3000
   npm run dev:cf  # CF仿真D1+KV+R2, 和线上一致, http://localhost:8787
-  线上: https://choutuan.telesearch.workers.dev
+  线上: https://choutuan.2453452242.shop
   Bot 端到端: bash scripts/e2e.sh (Bot API) / npm run e2e:tguser (用户号全链路);
   无secrets时SKIP, 配好重跑即全量, 模板见 .choutuan-secrets.example, 详见 docs/bot-testing.md
   注意: 不要用 pkill -f "node src/xxx" (会误杀自己), 用 kill PID 或 fuser -k 端口
