@@ -12,13 +12,13 @@ import { StringSession } from 'teleproto/sessions/index.js';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const TOKEN_RE = /(\d{6,12}:[A-Za-z0-9_-]{30,})/;
 
-async function waitForText(client, peer, pred, timeoutMs, stepMs = 5000) {
+async function waitForText(client, peer, pred, timeoutMs, stepMs = 5000, minId = 0) {
   const t0 = Date.now();
   let lastId = 0;
   for (;;) {
     const msgs = await client.getMessages(peer, { limit: 5 });
     for (const m of msgs) {
-      if (m.out || m.id <= lastId) continue;
+      if (m.out || m.id <= lastId || m.id <= minId) continue;
       lastId = Math.max(lastId, m.id);
       if (pred(m)) return m;
     }
@@ -67,10 +67,10 @@ const gm = await (await fetch(`https://api.telegram.org/bot${token}/getMe`, { me
 if (!gm.ok) { console.log('TGUSER FAIL: bot token 无效'); process.exit(1); }
 const botU = '@' + gm.result.username;
 console.log(`bot: ${botU}`);
-await client.sendMessage(botU, { message: '/start' });
+let sinceId=0; try { const h = await client.getMessages(botU, { limit: 1 }); if (h.length) sinceId = h[0].id; } catch (e) {} await client.sendMessage(botU, { message: '/start' });
 
 console.log('--- 4/6 等欢迎语 (轮询历史, 最长90s) ---');
-const found = await waitForText(client, botU, (x) => !x.out && (x.text || '').includes('丑团'), 90000);
+const found = await waitForText(client, botU, (x) => !x.out && (x.text || '').includes('丑团'), 90000, 5000, sinceId);
 if (!found) { console.log('TGUSER FAIL: 90s 内没收到欢迎语 (webhook 没接好, 查 wrangler tail)'); process.exit(1); }
 const dump = JSON.stringify(found.replyMarkup || '');
 const hasWebapp = /web_app|WebView/i.test(dump) && dump.includes(new URL(webapp).host);
