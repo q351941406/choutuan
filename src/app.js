@@ -27,7 +27,7 @@ export function createApp() {
   app.use('/api/*', cors());
 
   app.get('/api/health', (c) => c.json({
-    ok: true, name: 'choutuan 丑团', version: '0.10.2',
+    ok: true, name: 'choutuan 丑团', version: '0.10.3',
     runtime: c.env?.DB ? 'cloudflare-workers+d1' : 'node-memory',
     time: new Date().toISOString(),
   }));
@@ -147,5 +147,5 @@ export function createApp() {
     return c.json({ ok: true });
   });
 
-  return app;
+  app.post('/api/venue', async (c) => { let b; try { b = await c.req.json(); } catch { return c.json({ ok: false, error: 'bad json' }, 400); } const uid = Number(b?.user_id) || 0; const sid = String(b?.shop_id || ''); if (!uid || !sid) return c.json({ ok: false, error: 'bad args' }, 400); let shop = null; try { if (c.env?.DB) { const r = await c.env.DB.prepare('SELECT * FROM shops WHERE id = ?').bind(sid).first(); if (r) shop = mapRow(r); } } catch (e) { console.error('venue d1 fail', e); } if (!shop) shop = memShops.find((s) => s.id === sid) || null; if (!shop || !shop.lat || !shop.lng) return c.json({ ok: false, error: 'no coords' }, 404); const toks = [c.env?.BOT_TOKEN, c.env?.TEST_BOT_TOKEN].filter(Boolean); for (const tk of toks) { const r = await tgApi(tk, 'sendVenue', { chat_id: uid, latitude: shop.lat, longitude: shop.lng, title: shop.name, address: shop.address }); if (r && r.ok) return c.json({ ok: true }); } return c.json({ ok: false, error: 'send failed' }, 502); });  return app;
 }

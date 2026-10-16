@@ -19,7 +19,7 @@ const dom = new JSDOM(html, {
   url: 'http://localhost/',
   pretendToBeVisual: true,
   runScripts: 'dangerously',
-  beforeParse: function(w) { w.fetch = fakeFetch; }
+  beforeParse: function(w) { w.fetch = fakeFetch; w.Telegram = { WebApp: { platform: 'android', initDataUnsafe: { user: { id: 123, first_name: 'T' } } } }; }
 });
 const tick = function(ms) { return new Promise(function(r) { setTimeout(r, ms); }); };
 await tick(400);
@@ -47,4 +47,4 @@ else if (lastShop.indexOf('city=') < 0) fail = '请求没带city';
 else if (cityName !== '成都') fail = '顶栏城市没变:' + cityName;
 else if (shops2.length <= shops1.length) fail = '点搜索没发请求';
 if (fail) { console.log('UI FAIL: ' + fail); process.exit(1); }
-const cell = dom.window.document.querySelector('#list .cell'); cell.click(); await tick(400); dom.window.document.getElementById('navBtn').click(); await tick(300); const sheet = dom.window.document.getElementById('mapSheet'); const rows = dom.window.document.querySelectorAll('#mapList .maprow'); console.log('选单可见: ' + sheet.style.display + ' 选项数: ' + rows.length); dom.window.document.getElementById('mapCancel').click(); await tick(200); const closed = dom.window.document.getElementById('mapSheet').style.display; if (rows.length !== 4) fail = '选项数不对:' + rows.length; else if (closed !== 'none') fail = '取消没关闭'; if (fail) { console.log('UI FAIL: ' + fail); process.exit(1); } console.log('UI PASS: 城市切换+搜索按钮+导航选单');
+const cell = dom.window.document.querySelector('#list .cell'); cell.click(); await tick(400); dom.window.document.getElementById('navBtn').click(); await tick(300); const sheet = dom.window.document.getElementById('mapSheet'); const rows = dom.window.document.querySelectorAll('#mapList .maprow'); console.log('选单可见: ' + sheet.style.display + ' 选项数: ' + rows.length); var vbtn = rows[rows.length-1];vbtn.click(); await tick(400);var vposts = calls.filter(function(u){return u.indexOf('/api/venue')===0;});console.log('venue POST数: ' + vposts.length);dom.window.document.getElementById('mapCancel').click(); await tick(200); const closed = dom.window.document.getElementById('mapSheet').style.display; if (rows.length !== 6) fail = '选项数不对:' + rows.length; else if (vposts.length < 1) fail = 'venue没发请求';else if (closed !== 'none') fail = '取消没关闭'; if (fail) { console.log('UI FAIL: ' + fail); process.exit(1); } console.log('UI PASS: 城市切换+搜索按钮+导航选单');
