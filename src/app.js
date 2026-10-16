@@ -27,7 +27,7 @@ export function createApp() {
   app.use('/api/*', cors());
 
   app.get('/api/health', (c) => c.json({
-    ok: true, name: 'choutuan 丑团', version: '0.11.0',
+    ok: true, name: 'choutuan 丑团', version: '0.11.1',
     runtime: c.env?.DB ? 'cloudflare-workers+d1' : 'node-memory',
     time: new Date().toISOString(),
   }));
@@ -141,7 +141,7 @@ export function createApp() {
     const isStart = text.startsWith('/start');
     await tgApi(token, 'sendMessage', {
       chat_id: chatId,
-      text: isStart ? '欢迎来到丑团 choutuan,同城好店点开即看 👇' : '点下面进丑团看同城好店 👇',
+      text: isStart ? '欢迎来到丑团 choutuan,同城好店点开即看\nhttps://t.me/choutuan_bot/choutuan 👇' : '点下面进丑团看同城好店\nhttps://t.me/choutuan_bot/choutuan 👇',
       reply_markup: { inline_keyboard: [[{ text: '打开丑团', web_app: { url: WEBAPP_URL } }]] },
     });
     return c.json({ ok: true });
