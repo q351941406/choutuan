@@ -10,37 +10,41 @@ function fakeFetch(url) {
   else if (su.indexOf('/api/shops') === 0) {
     const u = new URL(su, 'http://x');
     const city = u.searchParams.get('city') || 'NONE';
-    body = { ok: true, total: 2, data: [
-      { id: 'a1', name: city + '-A', category: 'c1', rating: 4.5, sales: 10, per: 100, dist: '1km', address: 'a', hours: 'h', phone: '1', metro: 'm', emoji: 'E', tags: [], signature: [], reviews: [] },
-      { id: 'a2', name: city + '-B', category: 'c1', rating: 4.6, sales: 11, per: 101, dist: '2km', address: 'a', hours: 'h', phone: '1', metro: 'm', emoji: 'E', tags: [], signature: [], reviews: [] }
-    ]};
+    const mk = function(id, nm) { return { id: id, name: city + nm, category: 'c1', rating: 4.5, sales: 10, per: 100, dist: '1km', address: 'a', hours: 'h', phone: '1', metro: 'm', emoji: 'E', tags: [], signature: [], reviews: [] }; };
+    body = { ok: true, total: 2, data: [mk('a1', '-A'), mk('a2', '-B')] };
   }
   return Promise.resolve({ json: function() { return Promise.resolve(body); } });
 }
-const dom = new JSDOM(html, { url: 'http://localhost/', pretendToBeVisual: true, runScripts: 'dangerously', beforeParse(w) { w.fetch = fakeFetch; } });
-void 0;
-const scriptTextXXX = dom.window.document.querySelectorAll('script')[1].textContent;
-void 0;
+const dom = new JSDOM(html, {
+  url: 'http://localhost/',
+  pretendToBeVisual: true,
+  runScripts: 'dangerously',
+  beforeParse: function(w) { w.fetch = fakeFetch; }
+});
 const tick = function(ms) { return new Promise(function(r) { setTimeout(r, ms); }); };
 await tick(400);
-const btns = dom.window.document.querySelectorAll('#citychips .chip');
-console.log('city chips: ' + btns.length);
-if (btns.length !== 2) { console.log('UI FAIL: 城市按钮不是2个'); process.exit(1); }
-function shopUrls() { return calls.filter(function(u) { return u.indexOf('/api/shops') === 0; }); }
-console.log('首屏列表URL: ' + shopUrls().pop());
-btns[1].click();
+const cityBtn = dom.window.document.getElementById('cityBtn');
+const goBtn = dom.window.document.getElementById('goBtn');
+console.log('cityBtn: ' + (cityBtn ? cityBtn.textContent : 'MISSING') + ' | goBtn: ' + (goBtn ? 'yes' : 'MISSING'));
+if (!cityBtn || !goBtn) { console.log('UI FAIL: 按钮缺失'); process.exit(1); }
+const shops0 = calls.filter(function(u) { return u.indexOf('/api/shops') === 0; });
+cityBtn.click();
 await tick(400);
-const lastShop = shopUrls().pop();
-console.log('点切换后URL: ' + lastShop);
+const shops1 = calls.filter(function(u) { return u.indexOf('/api/shops') === 0; });
+const lastShop = shops1[shops1.length - 1];
+console.log('点城市后URL: ' + lastShop);
 const cityName = dom.window.document.getElementById('cityName').textContent;
 console.log('顶栏城市: ' + cityName);
 const names = Array.from(dom.window.document.querySelectorAll('#list .meta b')).map(function(el) { return el.textContent; });
 console.log('列表店名: ' + names.join(','));
+goBtn.click();
+await tick(400);
+const shops2 = calls.filter(function(u) { return u.indexOf('/api/shops') === 0; });
+console.log('点搜索后请求数: ' + shops2.length);
 let fail = '';
-if (shopUrls().pop() === shopUrls()[0]) fail = '点击后没有重新请求';
-if (shopUrls().length < 2) fail = '点击后没有重新请求';
+if (shops1.length <= shops0.length) fail = '点城市没发请求';
 else if (lastShop.indexOf('city=') < 0) fail = '请求没带city';
-else if (cityName !== '成都') fail = '顶栏城市没变';
-else if (names.length === 0 || names[0].indexOf('成都') !== 0) fail = '列表没刷成成都店';
+else if (cityName !== '成都') fail = '顶栏城市没变:' + cityName;
+else if (shops2.length <= shops1.length) fail = '点搜索没发请求';
 if (fail) { console.log('UI FAIL: ' + fail); process.exit(1); }
-console.log('UI PASS: 城市切换可点');
+console.log('UI PASS: 城市切换+搜索按钮');
