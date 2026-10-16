@@ -27,7 +27,7 @@ export function createApp() {
   app.use('/api/*', cors());
 
   app.get('/api/health', (c) => c.json({
-    ok: true, name: 'choutuan 丑团', version: '0.13.1',
+    ok: true, name: 'choutuan 丑团', version: '0.13.2',
     runtime: c.env?.DB ? 'cloudflare-workers+d1' : 'node-memory',
     time: new Date().toISOString(),
   }));
