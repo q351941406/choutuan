@@ -3,7 +3,6 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { shops as memShops } from './data/shops.js';
-const memThreads = [];
 
 function mapRow(r) {
   return {
@@ -28,7 +27,7 @@ export function createApp() {
   app.use('/api/*', cors());
 
   app.get('/api/health', (c) => c.json({
-    ok: true, name: 'choutuan 丑团', version: '0.13.0',
+    ok: true, name: 'choutuan 丑团', version: '0.13.1',
     runtime: c.env?.DB ? 'cloudflare-workers+d1' : 'node-memory',
     time: new Date().toISOString(),
   }));
@@ -140,25 +139,6 @@ export function createApp() {
     if (!chatId) return c.json({ ok: true });
     const text = (msg?.text || '').trim();
     const isStart = text.startsWith('/start');
-    const fromId = msg?.from?.id;
-    if (!isStart && fromId && text) {
-      let th = null;
-      try { if (c.env?.DB) { th = await c.env.DB.prepare('SELECT * FROM contact_threads WHERE user_id = ? OR owner_id = ? ORDER BY updated DESC LIMIT 1').bind(String(fromId), String(fromId)).first(); } } catch (e) { console.error('thread lookup fail', e); }
-      if (!th) th = memThreads.find((x) => x.user_id === String(fromId) || x.owner_id === String(fromId)) || null;
-      if (th) {
-        const peer = String(fromId) === String(th.owner_id) ? th.user_id : th.owner_id;
-        let nm = th.shop_id;
-        try { if (c.env?.DB) { const sr = await c.env.DB.prepare('SELECT name FROM shops WHERE id = ?').bind(th.shop_id).first(); if (sr && sr.name) nm = sr.name; } } catch (e) {}
-        if (nm === th.shop_id) { const ms = memShops.find((s) => s.id === th.shop_id); if (ms) nm = ms.name; }
-        const who = String(fromId) === String(th.owner_id) ? '店家' : '顾客';
-        await tgApi(token, 'sendMessage', { chat_id: Number(peer), text: '[丑团·' + nm + '] ' + who + ': ' + String(text).slice(0, 3500) });
-        const nowTs = Math.floor(Date.now() / 1000);
-        try { if (c.env?.DB) { await c.env.DB.prepare('UPDATE contact_threads SET updated = ? WHERE user_id = ? AND shop_id = ?').bind(nowTs, th.user_id, th.shop_id).run(); } } catch (e) {}
-        const mth = memThreads.find((x) => x.user_id === th.user_id && x.shop_id === th.shop_id);
-        if (mth) mth.updated = nowTs;
-        return c.json({ ok: true });
-      }
-    }
     await tgApi(token, 'sendMessage', {
       chat_id: chatId,
       text: isStart ? '欢迎来到丑团 choutuan,同城好店点开即看\nhttps://t.me/choutuan_bot/choutuan 👇' : '点下面进丑团看同城好店\nhttps://t.me/choutuan_bot/choutuan 👇',
@@ -227,30 +207,6 @@ export function createApp() {
       const r = await tgApi(tk, 'sendVenue', { chat_id: uid, latitude: shop.lat, longitude: shop.lng, title: shop.name, address: shop.address });
       if (r && r.ok) return c.json({ ok: true, mid: r.result && r.result.message_id });
     }
-    return c.json({ ok: false, error: 'send failed' }, 502); });  app.post('/api/contact', async (c) => {
-    let b;
-    try { b = await c.req.json(); } catch { return c.json({ ok: false, error: 'bad json' }, 400); }
-    const sid = String(b?.shop_id || '');
-    const text = String(b?.text || '').trim().slice(0, 1000);
-    if (!sid || !text) return c.json({ ok: false, error: 'bad args' }, 400);
-    const user = await validateInitData(String(b?.init_data || ''), botTokens(c));
-    if (!user) return c.json({ ok: false, error: 'bad initdata' }, 401);
-    const uid = String(user.id);
-    let shop = null;
-    try { if (c.env?.DB) { const r = await c.env.DB.prepare('SELECT * FROM shops WHERE id = ?').bind(sid).first(); if (r) shop = mapRow(r); } } catch (e) { console.error('contact shop fail', e); }
-    if (!shop) shop = memShops.find((s) => s.id === sid) || null;
-    const owner = String((shop && (shop.owner_id || shop.owner)) || '');
-    if (!shop || !owner) return c.json({ ok: false, error: 'no owner yet' }, 404);
-    const nowTs = Math.floor(Date.now() / 1000);
-    try { if (c.env?.DB) { await c.env.DB.prepare('INSERT INTO contact_threads (user_id, shop_id, owner_id, updated) VALUES (?, ?, ?, ?) ON CONFLICT(user_id, shop_id) DO UPDATE SET owner_id=excluded.owner_id, updated=excluded.updated').bind(uid, sid, owner, nowTs).run(); } } catch (e) { console.error('thread upsert fail', e); }
-    const mt = memThreads.find((x) => x.user_id === uid && x.shop_id === sid);
-    if (mt) { mt.owner_id = owner; mt.updated = nowTs; } else memThreads.push({ user_id: uid, shop_id: sid, owner_id: owner, updated: nowTs });
-    const toks = botTokens(c);
-    for (const tk of toks) {
-      const r2 = await tgApi(tk, 'sendMessage', { chat_id: Number(owner), text: '[丑团·' + shop.name + '] 顾客留言: ' + text });
-      if (r2 && r2.ok) return c.json({ ok: true });
-    }
-    return c.json({ ok: false, error: 'send failed' }, 502);
-  });
+    return c.json({ ok: false, error: 'send failed' }, 502); });
   return app;
 }

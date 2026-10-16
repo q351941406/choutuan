@@ -1,4 +1,5 @@
 # Changelog
+## v0.13.1 - 联系客服/双向联系改静态外跳(修静默无反应)
 ## v0.13.0 - 双向联系(联系老板+中继, 限号可用)
 ## v0.12.0 - initData验签, venue只能发给自己
 ## v0.11.1 - 欢迎语带直链t.me/choutuan_bot/choutuan
