@@ -1,6 +1,6 @@
 {
   "name": "choutuan",
-  "version": "0.14.1",
+  "version": "0.14.2",
   "description": "丑团 choutuan - 同城店铺信息展示 Telegram Mini App (Hono + Cloudflare)",
   "type": "module",
   "scripts": {
