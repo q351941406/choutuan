@@ -59,10 +59,12 @@ npm run dev:cf           # 方式2: CF仿真(D1+KV+R2), 和线上一致 http://l
 - [docs/prototype/](docs/prototype/) 草稿与真机截图
 - [CHANGELOG.md](CHANGELOG.md) 版本记录
 
-## 分支模型 (GitHub Flow + production 发版)
+## 分支模型 (preview 预发布 + main 永远绿 + production 发版)
 
-- `feat/xxx` → PR → `main`: 只跑 CI (自检+D1本地+冒烟+预演), 不发版
-- `main` → PR → `production`: 合进去自动跑 CI + CD (迁线上库→发 Workers→线上冒烟)
+- `feat/xxx` → PR → `main`: CI 全绿 required，main 始终可发版/永远绿色
+- `main` → PR → `preview`: 部署 staging 预发布，演练与验收
+- `main` → PR → `production`: CI + CD (迁线上库→发 Workers→线上冒烟)，仅生产
+- 测试覆盖率至少四类：statements / branches / functions / lines (当前 ≥90%)
 - 紧急回滚: `git revert` 到 `main`, 再提 PR 到 `production`
 
 ```bash
