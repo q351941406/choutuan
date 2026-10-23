@@ -31,3 +31,28 @@ HOOK_TEST = "15de7e755fbc68c5a799e2c3b4374d65"
 [[routes]]
 pattern = "choutuan.2453452242.shop"
 custom_domain = true
+
+
+[env.staging]
+name = "choutuan-staging"
+workers_dev = true
+routes = []
+
+[env.staging.vars]
+APP_NAME = "choutuan 丑团 (staging)"
+HOOK_PROD = "d78e5118e06fcba76c9dddf7aead5783"
+HOOK_TEST = "15de7e755fbc68c5a799e2c3b4374d65"
+
+[[env.staging.d1_databases]]
+binding = "DB"
+database_name = "choutuan-db-staging"
+database_id = "719183d1-9295-470f-8321-1ee21b9bfd5a"
+migrations_dir = "db/migrations"
+
+[[env.staging.kv_namespaces]]
+binding = "CACHE"
+id = "519ea3e987ac4682a21385a450facfbb"
+
+[[env.staging.r2_buckets]]
+binding = "IMAGES"
+bucket_name = "choutuan-images-staging"

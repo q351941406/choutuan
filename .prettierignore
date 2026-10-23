@@ -1,0 +1,9 @@
+docs/
+public/
+node_modules/
+.wrangler/
+coverage/
+db/
+config/
+src/data/
+*.md

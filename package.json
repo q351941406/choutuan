@@ -17,7 +17,15 @@
     "seed:gen": "node scripts/generate-seed.mjs",
     "check": "node --check src/app.js && node --check src/worker.js && node --check src/node-server.js && node --check scripts/ui-smoke.mjs && echo check-ok",
     "e2e:tguser": "node scripts/tguser-e2e.mjs",
-    "ui:smoke": "node scripts/ui-smoke.mjs"
+    "ui:smoke": "node scripts/ui-smoke.mjs",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write \"src/app.js\" \"src/worker.js\" \"src/node-server.js\" \"tests/**/*.{js,mjs,json}\" \"scripts/**/*.{js,mjs}\" \"*.json\" \".github/workflows/*.yml\"",
+    "format:check": "prettier --check \"src/app.js\" \"src/worker.js\" \"src/node-server.js\" \"tests/**/*.{js,mjs,json}\" \"scripts/**/*.{js,mjs}\" \"*.json\" \".github/workflows/*.yml\"",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "verify": "npm run lint && npm run format:check && npm run test:coverage"
   },
   "dependencies": {
     "@hono/node-server": "^2.1.5",
@@ -28,8 +36,16 @@
     "node": ">=18"
   },
   "devDependencies": {
+    "@eslint/js": "^9.17.0",
+    "@types/node": "^20.17.0",
+    "@vitest/coverage-v8": "^2.1.9",
+    "eslint": "^9.17.0",
+    "globals": "^15.14.0",
     "jsdom": "^24.1.3",
+    "prettier": "^3.4.2",
     "teleproto": "^1.230.0",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.9",
     "wrangler": "^4.151.0"
   }
 }

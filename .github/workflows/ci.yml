@@ -3,6 +3,9 @@ on:
   push:
     branches: [main, production]
   pull_request:
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -15,6 +18,14 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - name: 语法自检
         run: npm run check
+      - name: Lint
+        run: npm run lint
+      - name: 格式检查
+        run: npm run format:check
+      - name: 测试与覆盖率
+        run: npm run test:coverage
+      - name: 依赖安全审计
+        run: npm audit --audit-level=high --registry=https://registry.npmjs.org/ || true
       - run: npm run ui:smoke
       - name: seed一致性 (shops.js -> seed.sql)
         run: npm run seed:gen && git diff --exit-code db/seed.sql
@@ -25,15 +36,16 @@ jobs:
           PORT=3002 node src/node-server.js & echo $! > /tmp/srv.pid
           sleep 4
           curl -sf http://localhost:3002/api/health | tee /tmp/health.json | grep -q '"ok":true'
-          curl -sf --get --data-urlencode "category=美食" http://localhost:3002/api/shops | tee /tmp/shops.json | grep -q '"total"'
+          curl -sf --get --data-urlencode "category=洗浴按摩" http://localhost:3002/api/shops | tee /tmp/shops.json | grep -q '"total"'
           curl -sf http://localhost:3002/api/categories | tee /tmp/cats.json | grep -q '"全部"'
           kill "$(cat /tmp/srv.pid)"
-      - name: 红线-测试密钥不含生产值
+      - name: 密钥卫生检查
         run: |
-          f=config/test-secrets.env
-          [ -f "$f" ] || { echo "缺 $f"; exit 1; }
-          for k in TG_API_ID TG_API_HASH TG_STRING_SESSION BOT_TOKEN TEST_CHAT_ID; do grep -q "^$k=.." "$f" || { echo "缺 $k"; exit 1; }; done
-          ! grep -q "choutuan_bot" "$f" || { echo "生产Bot混入测试密钥!"; exit 1; }
-          echo "test-secrets ok (5键全, 无生产值)"
+          if [ -f config/test-secrets.env ]; then
+            ! grep -q "choutuan_bot" config/test-secrets.env || { echo "生产Bot混入测试密钥!"; exit 1; }
+            echo "local test-secrets present"
+          else
+            echo "no committed test secrets (public-repo mode)"
+          fi
       - name: CF部署预演
         run: npx wrangler deploy --dry-run

@@ -20,3 +20,9 @@ actionlint
 .meas*.mjs
 .tgtest*.mjs
 .chk*.mjs
+
+# 测试密钥 (公开仓不提交真值, 用 GitHub Secrets)
+config/test-secrets.env
+
+# 测试覆盖率产物
+coverage/
