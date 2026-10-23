@@ -174,11 +174,11 @@ export function createApp() {
     }
   }
   function hookToken(c, hook) {
-    const env = c.env || {};
-    if (hook === env.HOOK_PROD && env.BOT_TOKEN) return { token: env.BOT_TOKEN, role: 'prod' };
-    if (hook === env.HOOK_TEST && env.TEST_BOT_TOKEN) return { token: env.TEST_BOT_TOKEN, role: 'test' };
-    // 本地 Node 调试: 环境变量直通 (线上以 wrangler secret/vars 为准)
     try {
+      const env = c.env || {};
+      if (hook === env.HOOK_PROD && env.BOT_TOKEN) return { token: env.BOT_TOKEN, role: 'prod' };
+      if (hook === env.HOOK_TEST && env.TEST_BOT_TOKEN) return { token: env.TEST_BOT_TOKEN, role: 'test' };
+      // 本地 Node 调试: 环境变量直通 (线上以 wrangler secret/vars 为准)
       const g = (typeof process !== 'undefined' && process.env) || {};
       if (hook === g.HOOK_PROD && g.BOT_TOKEN) return { token: g.BOT_TOKEN, role: 'prod' };
       if (hook === g.HOOK_TEST && g.TEST_BOT_TOKEN) return { token: g.TEST_BOT_TOKEN, role: 'test' };

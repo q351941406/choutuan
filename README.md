@@ -64,7 +64,7 @@ npm run dev:cf           # 方式2: CF仿真(D1+KV+R2), 和线上一致 http://l
 - `feat/xxx` → PR → `main`: CI 全绿 required，main 始终可发版/永远绿色
 - `main` → PR → `preview`: 部署 staging 预发布，演练与验收
 - `main` → PR → `production`: CI + CD (迁线上库→发 Workers→线上冒烟)，仅生产
-- 测试覆盖率至少四类：statements / branches / functions / lines (当前 ≥90%)
+- 测试覆盖率至少四类：statements / branches / functions / lines (当前 ≥98%)
 - 紧急回滚: `git revert` 到 `main`, 再提 PR 到 `production`
 
 ```bash

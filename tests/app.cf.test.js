@@ -670,4 +670,316 @@ describe('丑团 Cloudflare 分支 API', () => {
       globalThis.crypto.subtle.importKey = origImportKey;
     }
   });
+
+  it('process 全局 guard 与 throwing env 分支', async () => {
+    // process undefined 覆盖 typeof false 分支
+    const prevProcess = globalThis.process;
+    try {
+      Object.defineProperty(globalThis, 'process', { value: undefined, configurable: true });
+      const env = {};
+      const r = await app.request('/api/tg/whatever', {}, env);
+      expect(r.status).toBe(404);
+    } finally {
+      Object.defineProperty(globalThis, 'process', { value: prevProcess, configurable: true, writable: true });
+    }
+
+    // throwing env 覆盖 hookToken/botTokens catch 分支
+    const throwingEnv = new Proxy(
+      {},
+      {
+        get(_t, prop) {
+          if (['HOOK_PROD', 'BOT_TOKEN', 'HOOK_TEST', 'TEST_BOT_TOKEN'].includes(String(prop))) throw new Error('boom');
+          return undefined;
+        },
+      }
+    );
+    const r2 = await app.request('/api/tg/whatever', {}, throwingEnv);
+    expect(r2.status).toBe(404);
+  });
+
+  it('memory shop tags 为空的 filterMem 分支', async () => {
+    const origLen = memShops.length;
+    memShops.push({
+      id: 'notag',
+      owner: '1',
+      lat: 1,
+      lng: 1,
+      name: 'notagfallback',
+      category: '商K',
+      rating: 4,
+      sales: 1,
+      per: 1,
+      dist: '1km',
+      address: 'a',
+      hours: 'h',
+      phone: '1',
+      metro: 'm',
+      emoji: 'E',
+      tags: undefined,
+      signature: [],
+      reviews: [],
+      city: '深圳',
+    });
+    try {
+      const r = await app.request('/api/shops?city=深圳&q=notagfallback', {});
+      const b = await r.json();
+      expect(b.ok).toBe(true);
+      expect(b.total).toBeGreaterThan(0);
+    } finally {
+      memShops.length = origLen;
+    }
+  });
+
+  it('health 显式 env 分支', async () => {
+    const r0 = await app.request('/api/health', {}, {});
+    const b0 = await r0.json();
+    expect(b0.runtime).toBe('node-memory');
+    const env = { DB: makeMockDb(), CACHE: null };
+    const r1 = await app.request('/api/health', {}, env);
+    const b1 = await r1.json();
+    expect(b1.runtime).toBe('cloudflare-workers+d1');
+  });
+
+  it('validateInitData 各短路第二操作数', async () => {
+    const env = { DB: makeMockDb(), CACHE: null }; // no bot tokens
+    // hash present but tokens empty -> !tokens.length 分支
+    const withHash =
+      'auth_date=' +
+      Math.floor(Date.now() / 1000) +
+      '&user=' +
+      encodeURIComponent(JSON.stringify({ id: 1 })) +
+      '&hash=deadbeef';
+    let res = await app.request(
+      '/api/venue',
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ shop_id: 's01', init_data: withHash }),
+      },
+      env
+    );
+    expect(res.status).toBe(401);
+
+    const token = '8450167476:AAENwkQfT1G_z42cgEjU-LgAMgCmprggLYM';
+    const envT = { DB: makeMockDb(), CACHE: null, BOT_TOKEN: token };
+    // user truthy but no id -> !user.id 分支
+    const params = new URLSearchParams();
+    params.set('auth_date', String(Math.floor(Date.now() / 1000)));
+    params.set('user', JSON.stringify({ first_name: 'NoId' }));
+    const keys = ['auth_date', 'user'];
+    const dcs = keys.map((k) => k + '=' + params.get(k)).join('\n');
+    const secret = crypto.createHmac('sha256', 'WebAppData').update(token).digest();
+    const hash = crypto.createHmac('sha256', secret).update(dcs).digest('hex');
+    params.set('hash', hash);
+    res = await app.request(
+      '/api/venue',
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ shop_id: 's01', init_data: params.toString() }),
+      },
+      envT
+    );
+    expect(res.status).toBe(401);
+  });
+
+  it('venue bad json 分支', async () => {
+    const res = await app.request(
+      '/api/venue',
+      { method: 'POST', headers: { 'content-type': 'application/json' }, body: 'not json' },
+      { DB: makeMockDb(), CACHE: null }
+    );
+    expect(res.status).toBe(400);
+  });
+
+  it('webhook unknown POST 与无文本分支', async () => {
+    const token = '8450167476:AAENwkQfT1G_z42cgEjU-LgAMgCmprggLYM';
+    const env = { BOT_TOKEN: token, HOOK_PROD: 'hookprod' };
+    const u = await app.request(
+      '/api/tg/not-a-hook',
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ message: { chat: { id: 1 }, text: 'hi' } }),
+      },
+      env
+    );
+    expect(u.status).toBe(404);
+
+    const r = await app.request(
+      '/api/tg/hookprod',
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ message: { chat: { id: 1 } } }),
+      },
+      env
+    );
+    expect(r.status).toBe(200);
+  });
+
+  it('botTokens c.env TEST_BOT_TOKEN 与 process 分支', async () => {
+    const env = { TEST_BOT_TOKEN: '123:TESTTOKEN', HOOK_TEST: 'hooktest' };
+    const r = await app.request(
+      '/api/tg/hooktest',
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ message: { chat: { id: 1 }, text: 'hi' } }),
+      },
+      env
+    );
+    expect(r.status).toBe(200);
+  });
+
+  it('botTokens throwing env catch 分支', async () => {
+    const throwingEnv = new Proxy(
+      {},
+      {
+        get(_t, prop) {
+          if (['BOT_TOKEN', 'TEST_BOT_TOKEN'].includes(String(prop))) throw new Error('boom');
+          return undefined;
+        },
+      }
+    );
+    const initData =
+      'auth_date=' +
+      Math.floor(Date.now() / 1000) +
+      '&user=' +
+      encodeURIComponent(JSON.stringify({ id: 1 })) +
+      '&hash=deadbeef';
+    const res = await app.request(
+      '/api/venue',
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ shop_id: 's01', init_data: initData }),
+      },
+      throwingEnv
+    );
+    expect(res.status).toBe(401);
+  });
+
+  it('botTokens env TEST_TOKEN 与 process token 分支', async () => {
+    const testToken = '123:TESTTOKEN';
+    const init = makeInitData(testToken, 8924350312);
+    const env = { DB: makeMockDb(), CACHE: null, TEST_BOT_TOKEN: testToken };
+    // fetch mock success
+    const r = await app.request(
+      '/api/venue',
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ shop_id: 's01', init_data: init }),
+      },
+      env
+    );
+    expect(r.status).toBe(200);
+
+    // process env tokens
+    const prev = { BOT_TOKEN: process.env.BOT_TOKEN, TEST_BOT_TOKEN: process.env.TEST_BOT_TOKEN };
+    process.env.BOT_TOKEN = '123:PROCBOT';
+    process.env.TEST_BOT_TOKEN = '123:PROCTEST';
+    try {
+      const init2 = makeInitData('123:PROCBOT', 8924350312);
+      const env2 = { DB: makeMockDb(), CACHE: null };
+      const r2 = await app.request(
+        '/api/venue',
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ shop_id: 's01', init_data: init2 }),
+        },
+        env2
+      );
+      expect(r2.status).toBe(200);
+    } finally {
+      if (prev.BOT_TOKEN === undefined) delete process.env.BOT_TOKEN;
+      else process.env.BOT_TOKEN = prev.BOT_TOKEN;
+      if (prev.TEST_BOT_TOKEN === undefined) delete process.env.TEST_BOT_TOKEN;
+      else process.env.TEST_BOT_TOKEN = prev.TEST_BOT_TOKEN;
+    }
+  });
+
+  it('validateInitData 缺字段右分支', async () => {
+    const token = '8450167476:AAENwkQfT1G_z42cgEjU-LgAMgCmprggLYM';
+    const env = { DB: makeMockDb(), CACHE: null, BOT_TOKEN: token };
+
+    // initData 为空 -> initData || '' 右分支
+    let res = await app.request(
+      '/api/venue',
+      { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ shop_id: 's01' }) },
+      env
+    );
+    expect(res.status).toBe(401);
+
+    // auth_date 缺失 -> auth_date || 0 右分支
+    const params = new URLSearchParams();
+    params.set('user', JSON.stringify({ id: 8924350312, first_name: 'Tester' }));
+    const keys = ['user'];
+    const dcs = keys.map((k) => k + '=' + params.get(k)).join('\n');
+    const secret = crypto.createHmac('sha256', 'WebAppData').update(token).digest();
+    const hash = crypto.createHmac('sha256', secret).update(dcs).digest('hex');
+    params.set('hash', hash);
+    res = await app.request(
+      '/api/venue',
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ shop_id: 's01', init_data: params.toString() }),
+      },
+      env
+    );
+    expect(res.status).toBe(401);
+
+    // user 缺失 -> user || 'null' 右分支
+    const params2 = new URLSearchParams();
+    params2.set('auth_date', String(Math.floor(Date.now() / 1000)));
+    const keys2 = ['auth_date'];
+    const dcs2 = keys2.map((k) => k + '=' + params2.get(k)).join('\n');
+    const hash2 = crypto.createHmac('sha256', secret).update(dcs2).digest('hex');
+    params2.set('hash', hash2);
+    res = await app.request(
+      '/api/venue',
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ shop_id: 's01', init_data: params2.toString() }),
+      },
+      env
+    );
+    expect(res.status).toBe(401);
+
+    // shop_id 缺失 -> b?.shop_id || '' 右分支
+    res = await app.request(
+      '/api/venue',
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ init_data: makeInitData(token, 8924350312) }),
+      },
+      env
+    );
+    expect(res.status).toBe(400);
+  });
+
+  it('process undefined 覆盖 botTokens || {} 右分支', async () => {
+    const prevProcess = globalThis.process;
+    try {
+      Object.defineProperty(globalThis, 'process', { value: undefined, configurable: true });
+      const env = { DB: makeMockDb(), CACHE: null };
+      const res = await app.request(
+        '/api/venue',
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ shop_id: 's01', init_data: 'x' }),
+        },
+        env
+      );
+      expect(res.status).toBe(401);
+    } finally {
+      Object.defineProperty(globalThis, 'process', { value: prevProcess, configurable: true, writable: true });
+    }
+  });
 });
