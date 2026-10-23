@@ -17,6 +17,21 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci --no-audit --no-fund
+      - name: 验证
+        run: npm run verify
+      - name: 线上D1备份 (migrate前)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          mkdir -p backups
+          npx wrangler d1 export choutuan-db --remote --output=backups/choutuan-$(date -u +%Y%m%dT%H%M%SZ).sql -y
+      - name: 上传D1备份artifact (保留30天)
+        uses: actions/upload-artifact@v4
+        with:
+          name: d1-backup-${{ github.sha }}
+          path: backups/*.sql
+          retention-days: 30
       - name: 线上D1迁移 (先迁库再发码)
         run: npx wrangler d1 migrations apply choutuan-db --remote
         env:
@@ -31,7 +46,7 @@ jobs:
         run: |
           sleep 15
           curl -sf --retry 5 --retry-delay 5 --retry-all-errors https://choutuan.2453452242.shop/api/health | tee /tmp/health.json | grep -q '"ok":true'
-          curl -sf --retry 5 --retry-delay 5 --retry-all-errors --get --data-urlencode "category=美食" https://choutuan.2453452242.shop/api/shops | tee /tmp/shops.json | grep -q '"total"'
+          curl -sf --retry 5 --retry-delay 5 --retry-all-errors --get --data-urlencode "category=洗浴按摩" https://choutuan.2453452242.shop/api/shops | tee /tmp/shops.json | grep -q '"total"'
           curl -sf --retry 5 --retry-delay 5 --retry-all-errors https://choutuan.2453452242.shop/api/categories | tee /tmp/cats.json | grep -q '"全部"'
           echo "smoke-ok"
       - name: 用户号全链路e2e (无secrets时SKIP, 有则强制)
@@ -46,3 +61,12 @@ jobs:
           E2E_BOT_TOKEN: ${{ secrets.TEST_BOT_TOKEN }}
           TEST_CHAT_ID: ${{ secrets.TEST_CHAT_ID }}
         run: bash scripts/e2e.sh
+      - name: 自动 Release / Tag
+        if: success()
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: prod-${{ github.sha }}
+          name: production deploy ${{ github.sha }}
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
