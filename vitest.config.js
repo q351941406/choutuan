@@ -6,12 +6,12 @@ export default defineConfig({
     include: ['tests/**/*.test.{js,mjs,cjs,ts}'],
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'lcov', 'json-summary'],
+      reporter: ['text', 'lcov', 'json-summary', 'json'],
       include: ['src/**/*.js'],
       exclude: ['src/node-server.js', 'src/worker.js'],
       thresholds: {
         statements: 95,
-        branches: 80,
+        branches: 90,
         functions: 100,
         lines: 95,
       },

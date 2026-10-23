@@ -474,4 +474,200 @@ describe('丑团 Cloudflare 分支 API', () => {
     expect(b.ok).toBe(true);
     expect(b.data.city).toBe('');
   });
+
+  it('hookToken test 角色与双 token 分支', async () => {
+    const env = {
+      BOT_TOKEN: '8450167476:AAENwkQfT1G_z42cgEjU-LgAMgCmprggLYM',
+      TEST_BOT_TOKEN: '123:TESTTOKEN',
+      HOOK_PROD: 'hookprod',
+      HOOK_TEST: 'hooktest',
+    };
+    const gt = await app.request('/api/tg/hooktest', {}, env);
+    const gtb = await gt.json();
+    expect(gt.status).toBe(200);
+    expect(gtb.role).toBe('test');
+  });
+
+  it('mapRow 空值回退分支', async () => {
+    const row = {
+      id: 'nullrow',
+      name: 'NullRow',
+      category: '商K',
+      rating: 4.0,
+      sales: 1,
+      per_capita: 10,
+      dist_text: '1km',
+      address: 'addr',
+      hours: 'h',
+      phone: '1',
+      metro: 'm',
+      city: null,
+      tags_json: null,
+      signature_json: null,
+      reviews_json: null,
+      lat: null,
+      lng: null,
+      owner_tg_id: null,
+      emoji: null,
+    };
+    const env = { DB: makeMockDb([row]), CACHE: null };
+    const r = await app.request('/api/shops/nullrow', {}, env);
+    const b = await r.json();
+    expect(b.ok).toBe(true);
+    expect(b.data.city).toBe('');
+    expect(b.data.owner_id).toBe('');
+    expect(b.data.tags).toEqual([]);
+    expect(b.data.lat).toBe(0);
+  });
+
+  it('tgApi 异常分支', async () => {
+    const old = globalThis.fetch;
+    globalThis.fetch = async () => {
+      throw new Error('net fail');
+    };
+    try {
+      const token = '8450167476:AAENwkQfT1G_z42cgEjU-LgAMgCmprggLYM';
+      const env = { BOT_TOKEN: token, HOOK_PROD: 'hookprod' };
+      const r = await app.request(
+        '/api/tg/hookprod',
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ message: { chat: { id: 1 }, text: '/start' } }),
+        },
+        env
+      );
+      // tgApi 捕获异常返回 {}，sendMessage 失败但 webhook 仍 200
+      expect(r.status).toBe(200);
+    } finally {
+      globalThis.fetch = old;
+    }
+  });
+
+  it('process.env hook/token 与 webhook 分支', async () => {
+    const prev = {
+      HOOK_PROD: process.env.HOOK_PROD,
+      BOT_TOKEN: process.env.BOT_TOKEN,
+      HOOK_TEST: process.env.HOOK_TEST,
+      TEST_BOT_TOKEN: process.env.TEST_BOT_TOKEN,
+    };
+    process.env.HOOK_PROD = 'prochook';
+    process.env.BOT_TOKEN = '123:PROCBOT';
+    process.env.HOOK_TEST = 'proctest';
+    process.env.TEST_BOT_TOKEN = '123:PROCTEST';
+    try {
+      const env = {};
+      const gp = await app.request('/api/tg/prochook', {}, env);
+      const gpb = await gp.json();
+      expect(gp.status).toBe(200);
+      expect(gpb.role).toBe('prod');
+      const gt = await app.request('/api/tg/proctest', {}, env);
+      const gtb = await gt.json();
+      expect(gt.status).toBe(200);
+      expect(gtb.role).toBe('test');
+
+      const pNoChat = await app.request(
+        '/api/tg/prochook',
+        { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ foo: 1 }) },
+        env
+      );
+      expect(pNoChat.status).toBe(200);
+    } finally {
+      const restore = (k, v) => {
+        if (v === undefined) delete process.env[k];
+        else process.env[k] = v;
+      };
+      restore('HOOK_PROD', prev.HOOK_PROD);
+      restore('BOT_TOKEN', prev.BOT_TOKEN);
+      restore('HOOK_TEST', prev.HOOK_TEST);
+      restore('TEST_BOT_TOKEN', prev.TEST_BOT_TOKEN);
+    }
+  });
+
+  it('venue bad args 与 not found', async () => {
+    const token = '8450167476:AAENwkQfT1G_z42cgEjU-LgAMgCmprggLYM';
+    const initData = makeInitData(token, 8924350312);
+    const env = { DB: makeMockDb(), CACHE: null, BOT_TOKEN: token };
+    let res = await app.request(
+      '/api/venue',
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ shop_id: '', init_data: initData }),
+      },
+      env
+    );
+    expect(res.status).toBe(400);
+
+    res = await app.request(
+      '/api/venue',
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ shop_id: 'nope', init_data: initData }),
+      },
+      env
+    );
+    expect(res.status).toBe(404);
+  });
+
+  it('validateInitData ad=0 / 缺 hash / outer catch', async () => {
+    const token = '8450167476:AAENwkQfT1G_z42cgEjU-LgAMgCmprggLYM';
+    const env = { DB: makeMockDb(), CACHE: null, BOT_TOKEN: token };
+
+    // 缺 hash
+    let initData = makeInitData(token, 8924350312).replace(/&hash=[^&]*/, '');
+    let res = await app.request(
+      '/api/venue',
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ shop_id: 's01', init_data: initData }),
+      },
+      env
+    );
+    expect(res.status).toBe(401);
+
+    // auth_date = 0
+    const uid = 8924350312;
+    const user = JSON.stringify({ id: uid, first_name: 'Tester' });
+    const params = new URLSearchParams();
+    params.set('auth_date', '0');
+    params.set('user', user);
+    const dcs = 'auth_date=' + params.get('auth_date') + '\nuser=' + params.get('user');
+    const secret = crypto.createHmac('sha256', 'WebAppData').update(token).digest();
+    const hash = crypto.createHmac('sha256', secret).update(dcs).digest('hex');
+    params.set('hash', hash);
+    res = await app.request(
+      '/api/venue',
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ shop_id: 's01', init_data: params.toString() }),
+      },
+      env
+    );
+    expect(res.status).toBe(401);
+
+    // outer catch: monkeypatch crypto.subtle.importKey to throw
+    const origImportKey = globalThis.crypto.subtle.importKey.bind(globalThis.crypto.subtle);
+    globalThis.crypto.subtle.importKey = () => {
+      throw new Error('boom');
+    };
+    try {
+      const good = makeInitData(token, uid);
+      res = await app.request(
+        '/api/venue',
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ shop_id: 's01', init_data: good }),
+        },
+        env
+      );
+      expect(res.status).toBe(401);
+    } finally {
+      globalThis.crypto.subtle.importKey = origImportKey;
+    }
+  });
 });
